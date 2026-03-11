@@ -6,10 +6,13 @@ import { Input } from '@/components/common/Input';
 import { Textarea } from '@/components/common/Textarea';
 import { Checkbox } from '@/components/common/Checkbox';
 import { Badge } from '@/components/common/Badge';
-import { Play, RotateCcw, Send, Terminal, Settings2, AlertCircle, Copy, Check } from 'lucide-react';
+import { Play, RotateCcw, Send, Terminal, Settings2, AlertCircle, Copy, Check, Trash2, RotateCw } from 'lucide-react';
 import { parseCurl, type ParsedCurl } from './utils/curl-parser';
 import axios from 'axios';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/lib/supabase';
+import { History, LayoutDashboard, Clock } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface FieldConfig {
   key: string;
@@ -26,6 +29,18 @@ interface RequestResult {
   timestamp: string;
 }
 
+interface ApiLog {
+  id: string;
+  created_at: string;
+  url: string;
+  method: string;
+  headers: unknown;
+  payload: unknown;
+  response_status: string;
+  response_data: unknown;
+  success: boolean;
+}
+
 export const LoopApiView: React.FC = () => {
   const [curlInput, setCurlInput] = useState('');
   const [loopCount, setLoopCount] = useState(1);
@@ -36,6 +51,10 @@ export const LoopApiView: React.FC = () => {
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [editableHeaders, setEditableHeaders] = useState<Record<string, string>>({});
+  const [activeTab, setActiveTab] = useState<'tester' | 'history'>('tester');
+  const [historyItems, setHistoryItems] = useState<ApiLog[]>([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
   const handleParse = () => {
     try {
@@ -43,6 +62,7 @@ export const LoopApiView: React.FC = () => {
       
       const parsed = parseCurl(curlInput);
       setParsedData(parsed);
+      setEditableHeaders(parsed.headers);
       setError(null);
       
       if (parsed.data && typeof parsed.data === 'object' && !Array.isArray(parsed.data)) {
@@ -56,8 +76,11 @@ export const LoopApiView: React.FC = () => {
       } else {
         setFieldConfigs([]);
       }
+      toast.success('CURL parsed successfully');
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Invalid CURL format');
+      const msg = err instanceof Error ? err.message : 'Invalid CURL format';
+      setError(msg);
+      toast.error(msg);
     }
   };
 
@@ -74,7 +97,7 @@ export const LoopApiView: React.FC = () => {
       case 'random_phone':
         return `09${Math.floor(Math.random() * 90000000 + 10000000)}`;
       case 'random_email':
-        return `test_${Math.random().toString(36).substring(7)}@atp30.com`;
+        return `user_${Math.random().toString(36).substring(7)}@example.com`;
       default:
         return config.value;
     }
@@ -88,6 +111,7 @@ export const LoopApiView: React.FC = () => {
     setProgress(0);
 
     const newResults: RequestResult[] = [];
+    toast.info(`Starting execution of ${loopCount} requests...`);
 
     for (let i = 0; i < loopCount; i++) {
       // Use record type for payload to avoid index errors
@@ -102,23 +126,43 @@ export const LoopApiView: React.FC = () => {
       });
 
       try {
-        // CORS Solution: Use a proxy
         let requestUrl = parsedData.url;
+        const finalHeaders = { ...editableHeaders };
         
-        // If targeting our main API, route through local /api to bypass CORS via Vite proxy
-        if (requestUrl.includes('app-coreapi-atp30-nonprod-sea-01.azurewebsites.net')) {
+        try {
           const urlObj = new URL(requestUrl);
-          requestUrl = `/api${urlObj.pathname}${urlObj.search}`;
+          // If the target origin is different from our current origin, use our dynamic proxy
+          if (urlObj.origin !== window.location.origin) {
+            finalHeaders['x-target-origin'] = urlObj.origin;
+            requestUrl = `/proxy${urlObj.pathname}${urlObj.search}`;
+            console.log(`[Proxy] Routing request to: ${urlObj.origin}${urlObj.pathname}`);
+          }
+        } catch {
+          // If URL is relative or invalid, we leave it as is
+          console.warn('Invalid or relative URL detected, skipping proxy logic');
+        }
+
+        const contentType = (finalHeaders['content-type'] || finalHeaders['Content-Type'] || '').toLowerCase();
+        let requestData: unknown = payload;
+
+        if (contentType.includes('multipart/form-data')) {
+          const formData = new FormData();
+          Object.entries(payload).forEach(([key, value]) => {
+            formData.append(key, String(value));
+          });
+          requestData = formData;
+          // Remove content-type to let axios/browser set it with correct boundary
+          delete finalHeaders['content-type'];
+          delete finalHeaders['Content-Type'];
+        } else if (!contentType) {
+          finalHeaders['Content-Type'] = 'application/json';
         }
 
         const response = await axios({
           method: parsedData.method,
           url: requestUrl,
-          headers: {
-            ...parsedData.headers,
-            'Content-Type': 'application/json',
-          },
-          data: payload,
+          headers: finalHeaders,
+          data: requestData,
           timeout: 15000,
         });
 
@@ -131,6 +175,9 @@ export const LoopApiView: React.FC = () => {
         };
         newResults.unshift(result);
         setResults([...newResults]);
+        
+        // Log to Supabase background
+        logToSupabase(requestUrl, parsedData.method, editableHeaders, payload, response.status, response.data, true);
       } catch (err: unknown) {
         let errorStatus: string | number = 'ERROR';
         let errorData: unknown = 'Something went wrong';
@@ -138,7 +185,11 @@ export const LoopApiView: React.FC = () => {
         if (axios.isAxiosError(err)) {
           if (!err.response) {
             errorStatus = 'CORS/NET ERROR';
-            errorData = 'ไม่สามารถติดต่อ API ได้ (อาจติดปัญหา CORS หรือ Network)';
+            errorData = {
+              error: 'CORS Blocked or Connection Refused',
+              suggestion: 'หากยิง API ข้าม Domain แนะนำให้ติดตั้ง Extension "Allow CORS" บน Chrome หรือใช้ Proxy ที่เตรียมไว้ให้',
+              hint: 'สำหรับ ATP30 ระบบจะพยายามเข้ารูท Proxy (/api หรือ /admin-api) ให้โดยอัตโนมัติ'
+            };
           } else {
             errorStatus = err.response.status;
             errorData = err.response.data;
@@ -154,11 +205,100 @@ export const LoopApiView: React.FC = () => {
         };
         newResults.unshift(result);
         setResults([...newResults]);
+        
+        // Log to Supabase background (re-extracting requestUrl or passed down)
+        logToSupabase(parsedData.url, parsedData.method, editableHeaders, payload, errorStatus, errorData, false);
       }
       setProgress(Math.round(((i + 1) / loopCount) * 100));
     }
     
     setIsRunning(false);
+    
+    const successCount = newResults.filter(r => r.success).length;
+    const failCount = newResults.length - successCount;
+    
+    if (failCount === 0) {
+      toast.success(`Completed! All ${successCount} requests succeeded.`);
+    } else {
+      toast.warning(`Completed with issues: ${successCount} success, ${failCount} failed.`);
+    }
+  };
+
+  const logToSupabase = async (url: string, method: string, headers: Record<string, string>, payload: unknown, status: string | number, response: unknown, success: boolean) => {
+    try {
+      await supabase.from('api_logs').insert({
+        url,
+        method,
+        headers,
+        payload,
+        response_status: status.toString(),
+        response_data: response,
+        success
+      });
+    } catch (err) {
+      console.error('Failed to log to Supabase:', err);
+    }
+  };
+
+  const fetchHistory = async () => {
+    setIsLoadingHistory(true);
+    try {
+      const { data, error } = await supabase
+        .from('api_logs')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(20);
+      
+      if (error) throw error;
+      setHistoryItems(data || []);
+    } catch (err) {
+      console.error('Error fetching history:', err);
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  };
+
+  React.useEffect(() => {
+    if (activeTab === 'history') {
+      fetchHistory();
+    }
+  }, [activeTab]);
+
+  const loadHistoryItem = (item: ApiLog) => {
+    setParsedData({
+      url: item.url,
+      method: item.method,
+      headers: item.headers as Record<string, string>,
+      data: item.payload,
+    });
+    setEditableHeaders(item.headers as Record<string, string>);
+    
+    if (item.payload && typeof item.payload === 'object' && !Array.isArray(item.payload)) {
+      const configs: FieldConfig[] = Object.entries(item.payload).map(([k, v]) => ({
+        key: k,
+        value: v,
+        enabled: false,
+        generator: 'none',
+      }));
+      setFieldConfigs(configs);
+    } else {
+      setFieldConfigs([]);
+    }
+    
+    setActiveTab('tester');
+    toast.success('Loaded history item into tester');
+  };
+
+  const deleteHistoryItem = async (id: string) => {
+    try {
+      const { error } = await supabase.from('api_logs').delete().eq('id', id);
+      if (error) throw error;
+      setHistoryItems(prev => prev.filter(item => item.id !== id));
+      toast.success('History item deleted');
+    } catch (err) {
+      toast.error('Failed to delete history item');
+      console.error(err);
+    }
   };
 
   const updateFieldConfig = (key: string, updates: Partial<FieldConfig>) => {
@@ -174,27 +314,54 @@ export const LoopApiView: React.FC = () => {
 
   return (
     <div className="container mx-auto p-4 md:p-8 space-y-8 max-w-6xl animate-in fade-in duration-700">
-      {/* Header */}
-      <div className="flex flex-col space-y-2">
-        <h1 className="text-4xl font-bold tracking-tight text-foreground">
-          Loop API Tester
-        </h1>
-        <p className="text-muted-foreground font-medium">ยิง Loop API เพื่อสร้างข้อมูลทดสอบด้วยการ Config payload ได้ตามต้องการ</p>
+      {/* Header & Tabs */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div className="space-y-2">
+          <h1 className="text-4xl font-bold tracking-tight text-foreground">
+            Loop API Tester
+          </h1>
+          <p className="text-muted-foreground font-medium">ยิง Loop API เพื่อสร้างข้อมูลทดสอบด้วยการ Config payload ได้ตามต้องการ</p>
+        </div>
+        
+        <div className="flex items-center bg-secondary/30 p-1 rounded-xl border border-border/50">
+          <button
+            onClick={() => setActiveTab('tester')}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
+              activeTab === 'tester' ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <LayoutDashboard className="w-4 h-4" />
+            Tester
+          </button>
+          <button
+            onClick={() => setActiveTab('history')}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
+              activeTab === 'history' ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <History className="w-4 h-4" />
+            History
+          </button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Left Side: Configuration */}
-        <div className="space-y-6">
-          <Card className="glow-card overflow-hidden transition-all duration-300">
-            <div className="h-1 bg-primary/10 w-full relative">
-               {isRunning && (
-                 <div 
-                   className="h-full bg-primary transition-all duration-300 shadow-[0_0_10px_rgba(59,130,246,0.5)]" 
-                   style={{ width: `${progress}%` }} 
-                 />
-               )}
-            </div>
-            <CardHeader>
+      <div className="animate-in fade-in slide-in-from-top-4 duration-500">
+        {activeTab === 'tester' ? (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
+            {/* Left Side: Configuration */}
+            <div className="space-y-6 flex flex-col">
+              <Card className="glow-card overflow-hidden transition-all duration-300 flex-1 flex flex-col">
+                <div className="h-1 bg-primary/10 w-full relative shrink-0">
+                   {isRunning && (
+                     <div 
+                       className="progress-bar-fill" 
+                       style={{ width: `${progress}%` }} 
+                     />
+                   )}
+                </div>
+                <CardHeader className="shrink-0">
               <CardTitle className="flex items-center gap-2">
                 <Terminal className="w-5 h-5 text-primary" />
                 Input CURL command
@@ -213,7 +380,7 @@ export const LoopApiView: React.FC = () => {
                 Parse CURL
               </Button>
               {error && (
-                <div className="p-3 bg-destructive/10 border border-destructive/20 text-destructive text-sm rounded-md flex flex-col gap-1">
+                <div className="p-3 bg-destructive/10 border border-destructive/20 text-destructive text-sm rounded-md flex flex-col gap-1 mt-auto">
                   <div className="flex items-center gap-2 font-semibold">
                     <AlertCircle className="w-4 h-4" />
                     Parse Error
@@ -223,6 +390,37 @@ export const LoopApiView: React.FC = () => {
               )}
             </CardContent>
           </Card>
+
+          {parsedData && (
+            <Card className="animate-in slide-in-from-bottom-5 duration-500 delay-75">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Terminal className="w-5 h-5 text-primary" />
+                  Request Headers
+                </CardTitle>
+                <CardDescription>ตรวจสอบและแก้ไข Header สำหรับการเรียก API</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                  {Object.entries(editableHeaders).map(([key, value]) => (
+                    <div key={key} className="flex gap-2 items-start p-2 rounded bg-secondary/20 border border-border/30">
+                      <div className="flex-1 space-y-1">
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase">{key}</p>
+                        <Input
+                          value={value}
+                          onChange={(e) => setEditableHeaders(prev => ({ ...prev, [key]: e.target.value }))}
+                          className="h-7 text-xs bg-transparent border-none p-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                  {Object.keys(editableHeaders).length === 0 && (
+                    <p className="text-xs text-center py-4 text-muted-foreground italic">No headers found</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {fieldConfigs.length > 0 && (
             <Card className="animate-in slide-in-from-bottom-5 duration-500">
@@ -277,38 +475,52 @@ export const LoopApiView: React.FC = () => {
                   ))}
                 </div>
 
-                <div className="pt-4 border-t border-border flex items-center gap-4">
-                  <div className="flex-1 space-y-1">
-                    <p className="text-sm font-medium">Loop Count</p>
-                    <Input
-                      type="number"
-                      min={1}
-                      max={100}
-                      value={loopCount}
-                      onChange={(e) => setLoopCount(parseInt(e.target.value) || 1)}
-                    />
-                  </div>
-                  <Button
-                    onClick={executeLoop}
-                    disabled={isRunning || !parsedData}
-                    className="flex-1 mt-6 h-10 glow-card"
-                  >
-                    {isRunning ? (
-                      <RotateCcw className="w-4 h-4 mr-2 animate-spin" />
-                    ) : (
-                      <Play className="w-4 h-4 mr-2" />
-                    )}
-                    Run Loop
-                  </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {parsedData && (
+          <Card className="animate-in slide-in-from-bottom-5 duration-500 delay-150 shadow-sm border-border/50">
+            <CardHeader className="shrink-0 pb-2">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <Send className="w-4 h-4 text-primary" />
+                Execution Controls
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-4">
+                <div className="flex-1 space-y-1">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase opacity-70">Loop Count</p>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={100}
+                    value={loopCount}
+                    onChange={(e) => setLoopCount(parseInt(e.target.value) || 1)}
+                    className="h-9 bg-secondary/20"
+                  />
                 </div>
-              </CardContent>
-            </Card>
-          )}
+                <Button
+                  onClick={executeLoop}
+                  disabled={isRunning || !parsedData}
+                  className="flex-[1.5] mt-auto h-9 shadow-md shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  {isRunning ? (
+                    <RotateCcw className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Play className="w-4 h-4 mr-2" />
+                  )}
+                  {isRunning ? `Running ${progress}%` : "Run Loop"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
         </div>
 
         {/* Right Side: Results */}
-        <div className="space-y-6">
-          <Card className="min-h-[400px] flex flex-col">
+        <div className="space-y-6 flex flex-col">
+          <Card className="h-full flex flex-col shadow-sm border-border/50">
             <CardHeader className="flex flex-row items-center justify-between shrink-0">
               <div>
                 <CardTitle className="flex items-center gap-2">
@@ -371,6 +583,87 @@ export const LoopApiView: React.FC = () => {
             </CardContent>
           </Card>
         </div>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-primary" />
+                  Recent History
+                </CardTitle>
+                <CardDescription>ประวัติการยิง API 20 รายการล่าสุดที่เก็บไว้ใน Supabase</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isLoadingHistory ? (
+                  <div className="flex justify-center py-20">
+                    <RotateCcw className="w-8 h-8 animate-spin text-primary/40" />
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {historyItems.map((item) => (
+                      <div key={item.id} className="p-4 rounded-xl border bg-secondary/10 border-border/50 hover:border-primary/30 transition-all group">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <Badge variant={item.success ? 'success' : 'destructive'}>
+                              {item.method}
+                            </Badge>
+                            <span className="text-sm font-mono truncate max-w-md bg-secondary px-2 py-0.5 rounded">
+                              {item.url}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button 
+                              variant="secondary" 
+                              size="sm" 
+                              onClick={() => loadHistoryItem(item)}
+                              className="h-8 gap-1.5"
+                            >
+                              <RotateCw className="w-3.5 h-3.5" />
+                              Use
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => deleteHistoryItem(item.id)}
+                              className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                            <span className="text-xs text-muted-foreground ml-2">
+                              {new Date(item.created_at).toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Payload</p>
+                            <pre className="text-[10px] p-3 bg-secondary/50 rounded-lg overflow-x-auto max-h-32 border border-border">
+                              {JSON.stringify(item.payload, null, 2)}
+                            </pre>
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Response ({item.response_status})</p>
+                            <pre className="text-[10px] p-3 bg-secondary/50 rounded-lg overflow-x-auto max-h-32 border border-border">
+                              {JSON.stringify(item.response_data, null, 2)}
+                            </pre>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {historyItems.length === 0 && (
+                      <div className="text-center py-20 text-muted-foreground">
+                        <History className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                        <p>No history found in database</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
     </div>
   );
