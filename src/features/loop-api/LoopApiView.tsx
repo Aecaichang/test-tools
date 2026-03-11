@@ -6,7 +6,7 @@ import { Input } from '@/components/common/Input';
 import { Textarea } from '@/components/common/Textarea';
 import { Checkbox } from '@/components/common/Checkbox';
 import { Badge } from '@/components/common/Badge';
-import { Play, RotateCcw, Plus, Send, Terminal, Settings2, AlertCircle, Copy, Check } from 'lucide-react';
+import { Play, RotateCcw, Send, Terminal, Settings2, AlertCircle, Copy, Check } from 'lucide-react';
 import { parseCurl, type ParsedCurl } from './utils/curl-parser';
 import axios from 'axios';
 import { cn } from '@/lib/utils';
@@ -90,8 +90,9 @@ export const LoopApiView: React.FC = () => {
     const newResults: RequestResult[] = [];
 
     for (let i = 0; i < loopCount; i++) {
-      const payload = { 
-        ...(typeof parsedData.data === 'object' ? parsedData.data : {}) 
+      // Use record type for payload to avoid index errors
+      const payload: Record<string, unknown> = { 
+        ...(typeof parsedData.data === 'object' && parsedData.data !== null ? (parsedData.data as Record<string, unknown>) : {}) 
       };
       
       fieldConfigs.forEach(config => {
@@ -101,9 +102,18 @@ export const LoopApiView: React.FC = () => {
       });
 
       try {
+        // CORS Solution: Use a proxy
+        let requestUrl = parsedData.url;
+        
+        // If targeting our main API, route through local /api to bypass CORS via Vite proxy
+        if (requestUrl.includes('app-coreapi-atp30-nonprod-sea-01.azurewebsites.net')) {
+          const urlObj = new URL(requestUrl);
+          requestUrl = `/api${urlObj.pathname}${urlObj.search}`;
+        }
+
         const response = await axios({
           method: parsedData.method,
-          url: parsedData.url,
+          url: requestUrl,
           headers: {
             ...parsedData.headers,
             'Content-Type': 'application/json',
@@ -122,12 +132,17 @@ export const LoopApiView: React.FC = () => {
         newResults.unshift(result);
         setResults([...newResults]);
       } catch (err: unknown) {
-        let errorStatus = 'ERROR';
-        let errorData = 'Something went wrong';
+        let errorStatus: string | number = 'ERROR';
+        let errorData: unknown = 'Something went wrong';
         
         if (axios.isAxiosError(err)) {
-          errorStatus = err.response?.status.toString() || 'NET_ERROR';
-          errorData = err.response?.data || err.message;
+          if (!err.response) {
+            errorStatus = 'CORS/NET ERROR';
+            errorData = 'ไม่สามารถติดต่อ API ได้ (อาจติดปัญหา CORS หรือ Network)';
+          } else {
+            errorStatus = err.response.status;
+            errorData = err.response.data;
+          }
         }
 
         const result: RequestResult = {
@@ -161,10 +176,10 @@ export const LoopApiView: React.FC = () => {
     <div className="container mx-auto p-4 md:p-8 space-y-8 max-w-6xl animate-in fade-in duration-700">
       {/* Header */}
       <div className="flex flex-col space-y-2">
-        <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent">
+        <h1 className="text-4xl font-bold tracking-tight text-foreground">
           Loop API Tester
         </h1>
-        <p className="text-muted-foreground">ยิง Loop API เพื่อสร้างข้อมูลทดสอบด้วยการ Config payload ได้ตามต้องการ</p>
+        <p className="text-muted-foreground font-medium">ยิง Loop API เพื่อสร้างข้อมูลทดสอบด้วยการ Config payload ได้ตามต้องการ</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -175,7 +190,7 @@ export const LoopApiView: React.FC = () => {
                {isRunning && (
                  <div 
                    className="h-full bg-primary transition-all duration-300 shadow-[0_0_10px_rgba(59,130,246,0.5)]" 
-                   style={{ width: `${progress}%` } as React.CSSProperties} 
+                   style={{ width: `${progress}%` }} 
                  />
                )}
             </div>
@@ -198,9 +213,12 @@ export const LoopApiView: React.FC = () => {
                 Parse CURL
               </Button>
               {error && (
-                <div className="p-3 bg-destructive/10 border border-destructive/20 text-destructive text-sm rounded-md flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4" />
-                  {error}
+                <div className="p-3 bg-destructive/10 border border-destructive/20 text-destructive text-sm rounded-md flex flex-col gap-1">
+                  <div className="flex items-center gap-2 font-semibold">
+                    <AlertCircle className="w-4 h-4" />
+                    Parse Error
+                  </div>
+                  <p className="opacity-90">{error}</p>
                 </div>
               )}
             </CardContent>
@@ -219,33 +237,42 @@ export const LoopApiView: React.FC = () => {
                 <div className="space-y-3">
                   {fieldConfigs.map((field) => (
                     <div key={field.key} className="flex items-center justify-between p-3 rounded-lg bg-secondary/30 border border-border/50 hover:border-primary/30 transition-colors">
-                      <div className="flex items-center gap-3">
-                        <Checkbox
-                          checked={field.enabled}
-                          onChange={(e) => updateFieldConfig(field.key, { enabled: (e.target as HTMLInputElement).checked })}
-                        />
-                        <div>
-                          <p className="text-sm font-medium">{field.key}</p>
-                          <p className="text-xs text-muted-foreground truncate max-w-[150px]">{field.value?.toString()}</p>
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="flex items-center shrink-0">
+                          <Checkbox
+                            checked={field.enabled}
+                            onChange={(e) => updateFieldConfig(field.key, { enabled: (e.target as HTMLInputElement).checked })}
+                          />
+                        </div>
+                        <div className="flex-1 flex flex-col gap-1 ml-3 min-w-0">
+                          <p className="text-[10px] font-bold text-primary/70 uppercase tracking-tighter leading-none">{field.key}</p>
+                          <Input
+                            value={field.value?.toString() || ''}
+                            onChange={(e) => updateFieldConfig(field.key, { value: e.target.value })}
+                            className="h-7 text-xs bg-transparent border-none p-0 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground/30 font-medium h-auto"
+                            placeholder="Value..."
+                          />
                         </div>
                       </div>
                       
-                      {field.enabled && (
-                        <select
-                          value={field.generator}
-                          onChange={(e) => updateFieldConfig(field.key, { generator: e.target.value as any })}
-                          className="text-xs bg-background border border-input rounded px-2 py-1 outline-none"
-                          aria-label={`Select generator for ${field.key}`}
-                        >
-                          <option value="none">Fixed Value</option>
-                          <option value="random_string">Random String</option>
-                          <option value="random_number">Random Number</option>
-                          <option value="random_uuid">Random UUID</option>
-                          <option value="timestamp">Timestamp</option>
-                          <option value="random_phone">Phone (TH)</option>
-                          <option value="random_email">Email (@atp30)</option>
-                        </select>
-                      )}
+                      <div className="flex items-center gap-2 shrink-0">
+                        {field.enabled && (
+                          <select
+                            value={field.generator}
+                            onChange={(e) => updateFieldConfig(field.key, { generator: e.target.value as FieldConfig['generator'] })}
+                            className="text-[10px] h-7 bg-background border border-input rounded-md px-1 outline-none text-muted-foreground focus:border-primary/50 transition-colors"
+                            aria-label={`Select generator for ${field.key}`}
+                          >
+                            <option value="none">Fixed Value</option>
+                            <option value="random_string">Random String</option>
+                            <option value="random_number">Random Number</option>
+                            <option value="random_uuid">Random UUID</option>
+                            <option value="timestamp">Timestamp</option>
+                            <option value="random_phone">Phone (TH)</option>
+                            <option value="random_email">Email (@atp30)</option>
+                          </select>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -290,28 +317,30 @@ export const LoopApiView: React.FC = () => {
                 </CardTitle>
                 <CardDescription>ผลลัพธ์จากการยิง API แต่ละรอบ</CardDescription>
               </div>
-              <div className="flex items-center gap-2">
-                {results.length > 0 && (
-                  <>
-                    <Button variant="outline" size="sm" onClick={copyToClipboard}>
-                      {copied ? <Check className="w-4 h-4 mr-2 text-green-500" /> : <Copy className="w-4 h-4 mr-2" />}
-                      {copied ? 'Copied' : 'Copy All'}
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => { setResults([]); setProgress(0); }}>
-                      Clear
-                    </Button>
-                  </>
-                )}
-              </div>
+                <div className="flex items-center gap-2">
+                  {results.length > 0 && (
+                    <>
+                      <Button variant="outline" size="sm" onClick={copyToClipboard} className="h-8">
+                        {copied ? <Check className="w-4 h-4 mr-2 text-green-500" /> : <Copy className="w-4 h-4 mr-2" />}
+                        {copied ? 'Copied' : 'Copy All'}
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => { setResults([]); setProgress(0); }} className="h-8">
+                        Clear
+                      </Button>
+                    </>
+                  )}
+                </div>
             </CardHeader>
             <CardContent className="flex-1 overflow-hidden">
               {results.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-muted-foreground space-y-4 opacity-50">
-                  <div className="w-16 h-16 rounded-full bg-secondary/50 flex items-center justify-center">
-                    <Plus className="w-8 h-8" />
+                <div className="flex flex-col items-center justify-center h-full text-muted-foreground space-y-4 py-20">
+                  <div className="w-20 h-20 rounded-full bg-secondary/50 flex items-center justify-center animate-pulse">
+                    <Terminal className="w-10 h-10 text-primary/40" />
                   </div>
-                  <p className="text-lg">ระบบพร้อมใช้งาน</p>
-                  <p className="text-sm">กรุณา Parse CURL และกด "Run Loop" เพื่อเริ่มการทดสอบ</p>
+                  <div className="text-center space-y-1">
+                    <p className="text-lg font-semibold text-foreground/70">Wating for input...</p>
+                    <p className="text-sm">วาง CURL และกด "Parse CURL" เพื่อเริ่มตั้งค่า</p>
+                  </div>
                 </div>
               ) : (
                 <div className="space-y-4 h-full overflow-y-auto pr-2 custom-scrollbar pb-6">
@@ -332,7 +361,7 @@ export const LoopApiView: React.FC = () => {
                         </div>
                         <span className="text-xs text-muted-foreground">{res.timestamp}</span>
                       </div>
-                      <pre className="text-[10px] font-mono p-3 bg-black/40 rounded-lg overflow-x-auto whitespace-pre-wrap max-h-40 border border-white/5">
+                      <pre className="text-[10px] font-mono p-3 bg-secondary/50 rounded-lg overflow-x-auto whitespace-pre-wrap max-h-40 border border-border">
                         {JSON.stringify(res.data, null, 2)}
                       </pre>
                     </div>
