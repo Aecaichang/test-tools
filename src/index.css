@@ -134,8 +134,9 @@
 
 .progress-bar-fill {
   height: 100%;
+  width: var(--progress-width, 0%);
   background-color: hsl(var(--primary));
-  transition: all 300ms ease-in-out;
+  transition: width 300ms ease-in-out;
   box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
 }
 

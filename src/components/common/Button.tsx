@@ -1,38 +1,23 @@
 import * as React from "react";
-import { cn } from "@/lib/utils";
+import { type VariantProps } from "class-variance-authority";
+import { Button as ShadcnButton, buttonVariants } from "@/components/ui/button";
 
 export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'destructive';
-  size?: 'sm' | 'md' | 'lg' | 'icon';
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof buttonVariants> {
+  asChild?: boolean;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = 'primary', size = 'md', ...props }, ref) => {
-    const variants = {
-      primary: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20",
-      secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-      outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
-      ghost: "hover:bg-accent hover:text-accent-foreground",
-      destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-    };
-
-    const sizes = {
-      sm: "h-9 px-3 text-xs",
-      md: "h-10 px-4 py-2",
-      lg: "h-12 px-8 text-lg",
-      icon: "h-10 w-10",
-    };
-
+  ({ variant, ...props }, ref) => {
+    // Map 'primary' to shadcn's 'default' for backward compatibility
+    // if variant is a string and equals 'primary'
+    const finalVariant = (variant as string) === 'primary' ? 'default' : variant;
+    
     return (
-      <button
-        className={cn(
-          "inline-flex items-center justify-center rounded-md font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
-          variants[variant],
-          sizes[size],
-          className
-        )}
+      <ShadcnButton
         ref={ref}
+        variant={finalVariant as VariantProps<typeof buttonVariants>['variant']}
         {...props}
       />
     );

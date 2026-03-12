@@ -1,7 +1,17 @@
 import * as React from "react";
-import { Modal } from "./Modal";
-import { Button } from "./Button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/common/Button";
 import { AlertTriangle } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -25,33 +35,37 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   variant = "destructive",
 }) => {
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={title} className="max-w-md">
-      <div className="flex flex-col items-center text-center space-y-4 py-2">
-        <div className={`p-3 rounded-full ${variant === 'destructive' ? 'bg-destructive/10 text-destructive' : 'bg-primary/10 text-primary'}`}>
-          <AlertTriangle className="w-8 h-8" />
-        </div>
-        <div className="space-y-2">
-          <h3 className="text-xl font-bold">{title}</h3>
-          <p className="text-muted-foreground text-sm leading-relaxed">
+    <AlertDialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <AlertDialogContent className="max-w-md">
+        <AlertDialogHeader className="flex flex-col items-center text-center space-y-4">
+          <div className={cn(
+            "p-3 rounded-full",
+            variant === 'destructive' ? 'bg-destructive/10 text-destructive' : 'bg-primary/10 text-primary'
+          )}>
+            <AlertTriangle className="w-8 h-8" />
+          </div>
+          <AlertDialogTitle className="text-xl font-bold">{title}</AlertDialogTitle>
+          <AlertDialogDescription className="text-muted-foreground text-sm leading-relaxed">
             {description}
-          </p>
-        </div>
-        <div className="flex items-center gap-3 w-full pt-4">
-          <Button variant="ghost" onClick={onClose} className="flex-1 rounded-xl">
-            {cancelText}
-          </Button>
-          <Button 
-            variant={variant} 
-            onClick={() => {
-              onConfirm();
-              onClose();
-            }} 
-            className="flex-1 rounded-xl shadow-lg"
-          >
-            {confirmText}
-          </Button>
-        </div>
-      </div>
-    </Modal>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter className="flex items-center gap-3 w-full pt-4 sm:justify-center">
+          <AlertDialogCancel asChild>
+            <Button variant="ghost" className="flex-1 rounded-xl">
+              {cancelText}
+            </Button>
+          </AlertDialogCancel>
+          <AlertDialogAction asChild>
+            <Button 
+              variant={variant === 'primary' ? 'default' : 'destructive'} 
+              onClick={onConfirm}
+              className="flex-1 rounded-xl shadow-lg"
+            >
+              {confirmText}
+            </Button>
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 };
