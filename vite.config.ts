@@ -22,9 +22,11 @@ export default defineConfig({
         router: (req: { headers: Record<string, string | string[] | undefined> }) => {
           const targetOrigin = req.headers['x-target-origin'];
           if (typeof targetOrigin === 'string' && targetOrigin.startsWith('http')) {
+            console.log(`[Proxy] Routing to: ${targetOrigin}`);
             return targetOrigin;
           }
-          return undefined; // Let it fail or use placeholder if header is missing
+          console.warn('[Proxy] Missing or invalid x-target-origin header');
+          return undefined; 
         },
       }
     }

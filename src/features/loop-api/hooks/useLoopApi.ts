@@ -16,6 +16,7 @@ export const useLoopApi = () => {
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [editableHeaders, setEditableHeaders] = useState<Record<string, string>>({});
+  const [useProxy, setUseProxy] = useState(true);
 
   // --- History State ---
   const [historyItems, setHistoryItems] = useState<ApiLog[]>([]);
@@ -153,7 +154,7 @@ export const useLoopApi = () => {
         
         try {
           const urlObj = new URL(requestUrl);
-          if (urlObj.origin !== window.location.origin) {
+          if (useProxy && urlObj.origin !== window.location.origin) {
             finalHeaders['x-target-origin'] = urlObj.origin;
             requestUrl = `/proxy${urlObj.pathname}${urlObj.search}`;
           }
@@ -353,6 +354,7 @@ export const useLoopApi = () => {
     editableHeaders, setEditableHeaders,
     handleParse, executeLoop,
     updateFieldConfig, removeFieldConfig, clearResults,
+    useProxy, setUseProxy,
     
     // History
     historyItems, isLoadingHistory,

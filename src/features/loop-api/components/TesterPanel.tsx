@@ -6,7 +6,7 @@ import { Textarea } from '@/components/common/Textarea';
 import { Checkbox } from '@/components/common/Checkbox';
 import { Badge } from '@/components/common/Badge';
 import { Select, type SelectOption } from '@/components/common/Select';
-import { Terminal, RotateCcw, Settings2, AlertCircle, Database, Search, Zap, Trash2 } from 'lucide-react';
+import { Terminal, RotateCcw, Settings2, AlertCircle, Database, Search, Zap, Trash2, Globe } from 'lucide-react';
 import { ParsedCurl } from '../utils/curl-parser';
 import { FieldConfig } from '../types';
 import { cn } from '@/lib/utils';
@@ -24,6 +24,8 @@ interface TesterPanelProps {
   fieldConfigs: FieldConfig[];
   updateFieldConfig: (key: string, updates: Partial<FieldConfig>) => void;
   removeFieldConfig: (key: string, location: 'payload' | 'query') => void;
+  useProxy: boolean;
+  setUseProxy: (val: boolean) => void;
 }
 
 const GENERATOR_OPTIONS: SelectOption[] = [
@@ -49,6 +51,8 @@ export const TesterPanel: React.FC<TesterPanelProps> = ({
   fieldConfigs,
   updateFieldConfig,
   removeFieldConfig,
+  useProxy,
+  setUseProxy,
 }) => {
   return (
     <div className="space-y-6 flex flex-col">
@@ -62,12 +66,47 @@ export const TesterPanel: React.FC<TesterPanelProps> = ({
             />
           )}
         </div>
-        <CardHeader className="shrink-0 pb-4">
-          <CardTitle className="flex items-center gap-2 group-hover:text-primary transition-colors">
-            <Terminal className="w-5 h-5" />
-            Input CURL command
-          </CardTitle>
-          <CardDescription>วาง CURL ที่คุณต้องการยิงซ้ำที่นี่</CardDescription>
+        <CardHeader className="shrink-0 pb-4 flex flex-row items-center justify-between space-y-0">
+          <div className="space-y-1.5">
+            <CardTitle className="flex items-center gap-2 group-hover:text-primary transition-colors">
+              <Terminal className="w-5 h-5" />
+              Input CURL command
+            </CardTitle>
+            <CardDescription>วาง CURL ที่คุณต้องการยิงซ้ำที่นี่</CardDescription>
+          </div>
+          
+          <div className="flex items-center gap-2 bg-secondary/30 p-1.5 rounded-xl border border-border/50 animate-in fade-in zoom-in-95 duration-500">
+            <div className="flex items-center gap-2 px-2 py-1">
+              <div className={cn(
+                "w-2 h-2 rounded-full",
+                useProxy ? "bg-green-500 animate-pulse" : "bg-muted-foreground/30"
+              )} />
+              <span className="text-[10px] font-bold uppercase tracking-tighter text-muted-foreground">Proxy Mode</span>
+            </div>
+            <div className="flex items-center bg-background rounded-lg border border-border/50 shadow-sm overflow-hidden">
+              <button
+                onClick={() => setUseProxy(true)}
+                className={cn(
+                  "px-3 py-1.5 text-[10px] font-bold transition-all flex items-center gap-1.5",
+                  useProxy ? "bg-primary text-primary-foreground shadow-inner" : "text-muted-foreground hover:bg-secondary"
+                )}
+                title="Use dynamic proxy to bypass CORS (fires through localhost/proxy)"
+              >
+                <Globe className="w-3 h-3" />
+                ON
+              </button>
+              <button
+                onClick={() => setUseProxy(false)}
+                className={cn(
+                  "px-3 py-1.5 text-[10px] font-bold transition-all",
+                  !useProxy ? "bg-destructive/10 text-destructive" : "text-muted-foreground hover:bg-secondary"
+                )}
+                title="Send requests directly from browser (origin header preserved)"
+              >
+                OFF
+              </button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4 pt-0">
           <div className="relative">

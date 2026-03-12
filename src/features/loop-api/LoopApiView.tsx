@@ -27,6 +27,7 @@ export const LoopApiView: React.FC = () => {
     editableHeaders, setEditableHeaders,
     handleParse, executeLoop,
     updateFieldConfig, removeFieldConfig, clearResults,
+    useProxy, setUseProxy,
     
     // History
     historyItems, isLoadingHistory,
@@ -105,6 +106,8 @@ export const LoopApiView: React.FC = () => {
                 fieldConfigs={fieldConfigs}
                 updateFieldConfig={updateFieldConfig}
                 removeFieldConfig={removeFieldConfig}
+                useProxy={useProxy}
+                setUseProxy={setUseProxy}
               />
               
               <ExecutionControls 
