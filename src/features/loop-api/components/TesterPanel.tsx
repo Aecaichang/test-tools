@@ -177,7 +177,7 @@ export const TesterPanel: React.FC<TesterPanelProps> = ({
 
       {/* Parameters Config Section */}
       {fieldConfigs.length > 0 && (
-        <Card className="animate-in slide-in-from-bottom-5 duration-500 border-primary/10 overflow-hidden">
+        <Card className="animate-in slide-in-from-bottom-5 duration-500 border-primary/10 relative z-20">
           <CardHeader className="pb-4 bg-secondary/5 border-b border-border/30">
             <CardTitle className="flex items-center gap-2 text-lg">
               <Settings2 className="w-5 h-5 text-primary" />
@@ -186,14 +186,15 @@ export const TesterPanel: React.FC<TesterPanelProps> = ({
             <CardDescription>Configure dynamic values for your test</CardDescription>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="divide-y divide-border/30 max-h-[500px] overflow-y-auto custom-scrollbar">
-              {fieldConfigs.map((field) => (
+            <div className="divide-y divide-border/30">
+              {fieldConfigs.map((field, index) => (
                 <div 
                   key={`${field.location}-${field.key}`} 
                   className={cn(
                     "flex flex-col gap-3 p-4 transition-all duration-300",
                     field.enabled ? "bg-primary/[0.03] animate-pulse-subtle" : "hover:bg-secondary/20"
                   )}
+                  style={{ zIndex: fieldConfigs.length - index, position: 'relative' }}
                 >
                   <div className="flex items-center justify-between gap-4 group/row">
                     <div className="flex items-center gap-4 flex-1 min-w-0">

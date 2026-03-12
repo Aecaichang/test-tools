@@ -38,7 +38,7 @@ export const Select: React.FC<SelectProps> = ({
   }, []);
 
   return (
-    <div className={cn("relative w-full min-w-[140px]", className)} ref={containerRef}>
+    <div className={cn("relative w-full min-w-[140px]", className, isOpen ? "z-[100]" : "z-0")} ref={containerRef}>
       <button
         type="button"
         disabled={disabled}

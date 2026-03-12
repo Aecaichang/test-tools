@@ -25,7 +25,7 @@ export const ExecutionControls: React.FC<ExecutionControlsProps> = ({
   if (!parsedData) return null;
 
   return (
-    <Card className="animate-in slide-in-from-bottom-5 duration-500 delay-150 shadow-sm border-border/50">
+    <Card className="animate-in slide-in-from-bottom-5 duration-500 delay-150 shadow-sm border-border/50 relative z-10">
       <CardHeader className="shrink-0 pb-2">
         <CardTitle className="text-sm font-semibold flex items-center gap-2">
           <Send className="w-4 h-4 text-primary" />
