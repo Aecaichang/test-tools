@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
-import { Play, Zap, FileJson, ArrowRight, Database, Link } from 'lucide-react';
+import { Play, Zap, FileJson, ArrowRight, Database, Link, FileSpreadsheet } from 'lucide-react';
 
 interface Tool {
   id: string;
@@ -52,11 +52,19 @@ export const HomeView: React.FC<HomeViewProps> = ({ onSelectTool }) => {
     },
     {
       id: 'json-parser',
-      name: 'JSON Parser',
-      description: 'เครื่องมือช่วยจัดการ JSON, Format, และเลือกฟิลด์ที่ต้องการอย่างรวดเร็ว',
+      name: 'JSON Utilities',
+      description: 'เครื่องมือจัดรูปแบบ (Formatter), ย่อขนาด (Minify) และเปรียบเทียบความแตกต่าง (Diff) ของ JSON',
       icon: <FileJson className="w-8 h-8" />,
       color: 'bg-emerald-500',
-      status: 'coming_soon'
+      status: 'ready'
+    },
+    {
+      id: 'excel-tool',
+      name: 'Excel Viewer',
+      description: 'ตัวช่วยอ่านไฟล์ Excel และ CSV พร้อมระบบค้นหาข้อมูล และแปลงเป็น JSON ได้ทันที',
+      icon: <FileSpreadsheet className="w-8 h-8" />,
+      color: 'bg-emerald-600',
+      status: 'ready'
     }
   ];
 

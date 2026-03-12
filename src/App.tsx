@@ -3,9 +3,11 @@ import { LoopApiView } from './features/loop-api/LoopApiView'
 import { HomeView } from './features/home/HomeView'
 import { MockGeneratorView } from './features/mock-generator/MockGeneratorView'
 import { Base64ToolView } from './features/base64-tool/Base64ToolView'
+import { JsonToolView } from './features/json-tool/JsonToolView'
+import { ExcelToolView } from './features/excel-tool/ExcelToolView'
 import { Toaster } from 'sonner'
 
-type View = 'home' | 'loop-api' | 'performance' | 'json-parser' | 'mock-generator' | 'base64-tool'
+type View = 'home' | 'loop-api' | 'performance' | 'json-tool' | 'excel-tool' | 'mock-generator' | 'base64-tool'
 
 function App() {
   const [currentView, setCurrentView] = useState<View>('home')
@@ -18,8 +20,16 @@ function App() {
         return <MockGeneratorView />
       case 'base64-tool':
         return <Base64ToolView />
+      case 'json-tool':
+        return <JsonToolView />
+      case 'excel-tool':
+        return <ExcelToolView />
       case 'home':
-        return <HomeView onSelectTool={(id) => setCurrentView(id as View)} />
+        return <HomeView onSelectTool={(id) => {
+          if (id === 'json-parser') return setCurrentView('json-tool');
+          if (id === 'excel-tool') return setCurrentView('excel-tool');
+          return setCurrentView(id as View);
+        }} />
       default:
         return (
           <div className="flex flex-col items-center justify-center py-24 space-y-4">
