@@ -5,9 +5,10 @@ import { MockGeneratorView } from './features/mock-generator/MockGeneratorView'
 import { Base64ToolView } from './features/base64-tool/Base64ToolView'
 import { JsonToolView } from './features/json-tool/JsonToolView'
 import { ExcelToolView } from './features/excel-tool/ExcelToolView'
+import { ProductQueryView } from './features/product-query/ProductQueryView'
 import { Toaster } from 'sonner'
 
-type View = 'home' | 'loop-api' | 'performance' | 'json-tool' | 'excel-tool' | 'mock-generator' | 'base64-tool'
+type View = 'home' | 'loop-api' | 'performance' | 'json-tool' | 'excel-tool' | 'mock-generator' | 'base64-tool' | 'product-query'
 
 function App() {
   const [currentView, setCurrentView] = useState<View>('home')
@@ -24,6 +25,8 @@ function App() {
         return <JsonToolView />
       case 'excel-tool':
         return <ExcelToolView />
+      case 'product-query':
+        return <ProductQueryView />
       case 'home':
         return <HomeView onSelectTool={(id) => {
           if (id === 'json-parser') return setCurrentView('json-tool');

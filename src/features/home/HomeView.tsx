@@ -65,6 +65,14 @@ export const HomeView: React.FC<HomeViewProps> = ({ onSelectTool }) => {
       icon: <FileSpreadsheet className="w-8 h-8" />,
       color: 'bg-emerald-600',
       status: 'ready'
+    },
+    {
+      id: 'product-query',
+      name: 'Product SQL Generator',
+      description: 'เครื่องมือช่วยสร้าง SQL (Select / Update / Rollback) สำหรับจัดการข้อมูลสินค้าจำนวนมากจากรหัส SKU',
+      icon: <Database className="w-8 h-8" />,
+      color: 'bg-orange-500',
+      status: 'ready'
     }
   ];
 
