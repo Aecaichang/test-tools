@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { useCurlParser } from './useCurlParser';
 import { useApiHistory } from './useApiHistory';
 import { useApiExecutor } from './useApiExecutor';
-import { type ApiLog } from '../types';
+import { type ApiLog, type FieldConfig } from '../types';
 
 export const useLoopApi = () => {
   const [useProxy, setUseProxy] = useState(true);
@@ -12,7 +12,7 @@ export const useLoopApi = () => {
     parsedData, setParsedData,
     fieldConfigs, setFieldConfigs,
     editableHeaders, setEditableHeaders,
-    error, setError,
+    error,
     handleParse,
     updateFieldConfig,
     removeFieldConfig
@@ -29,7 +29,7 @@ export const useLoopApi = () => {
 
   const {
     loopCount, setLoopCount,
-    results, setResults,
+    results,
     isRunning,
     progress,
     executeLoop,
@@ -51,16 +51,15 @@ export const useLoopApi = () => {
     });
     setEditableHeaders(item.headers as Record<string, string>);
     
-    // We can reuse the parse logic to extract field configs
-    // But since we already have the payload, we can manually populate them or call a modified handleParse
-    // Let's just manually populate to avoid side effects of handleParse toast
-    const newConfigs: any[] = [];
+    const newConfigs: FieldConfig[] = [];
     try {
       const url = new URL(item.url);
       url.searchParams.forEach((v, k) => {
-        newConfigs.push({ key: k, value: v, enabled: false, generator: 'none', location: 'query' });
+        newConfigs.push({ key: k, value: v as string, enabled: false, generator: 'none', location: 'query' });
       });
-    } catch {}
+    } catch (error) {
+      console.warn('Could not parse URL for history item:', error);
+    }
 
     if (item.payload && typeof item.payload === 'object' && !Array.isArray(item.payload)) {
       Object.entries(item.payload).forEach(([k, v]) => {
@@ -71,19 +70,14 @@ export const useLoopApi = () => {
   }, [setParsedData, setEditableHeaders, setFieldConfigs]);
 
   return {
-    // Parser
     curlInput, setCurlInput,
     parsedData, fieldConfigs,
     error, editableHeaders, setEditableHeaders,
     handleParse, updateFieldConfig, removeFieldConfig,
-    
-    // Executor
     loopCount, setLoopCount,
     results, isRunning,
     progress, clearResults, executeLoop,
     useProxy, setUseProxy,
-    
-    // History
     historyItems, isLoadingHistory,
     fetchHistory, deleteHistoryItem,
     deleteAllHistory, loadHistoryItem

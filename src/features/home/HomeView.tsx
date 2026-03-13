@@ -1,29 +1,122 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
-import { Play, Zap, FileJson, ArrowRight, Database, Link, FileSpreadsheet } from 'lucide-react';
+import { Badge } from '@/components/common/Badge';
+import {
+  Play,
+  Zap,
+  FileJson,
+  ArrowRight,
+  Database,
+  Link,
+  FileSpreadsheet,
+  Sparkles,
+  Star,
+  Pin,
+  Clock3
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+type ToolStatus = 'ready' | 'beta' | 'coming_soon';
 
 interface Tool {
   id: string;
   name: string;
   description: string;
   icon: React.ReactNode;
-  color: string;
-  status: 'ready' | 'coming_soon';
+  accentClass: string;
+  iconClass: string;
+  category: string;
+  status: ToolStatus;
+}
+
+interface ToolUsageMeta {
+  openCount: number;
+  lastOpenedAt: string | null;
+  pinned: boolean;
+  favorite: boolean;
 }
 
 interface HomeViewProps {
   onSelectTool: (toolId: string) => void;
 }
 
+const TOOL_USAGE_STORAGE_KEY = 'test_tools_home_usage_v1';
+
+const defaultUsageMeta: ToolUsageMeta = {
+  openCount: 0,
+  lastOpenedAt: null,
+  pinned: false,
+  favorite: false
+};
+
+const readUsageStorage = (): Record<string, ToolUsageMeta> => {
+  try {
+    const raw = localStorage.getItem(TOOL_USAGE_STORAGE_KEY);
+    if (!raw) return {};
+
+    const parsed = JSON.parse(raw) as Record<string, Partial<ToolUsageMeta>>;
+    return Object.entries(parsed).reduce<Record<string, ToolUsageMeta>>((acc, [toolId, value]) => {
+      acc[toolId] = {
+        openCount: Number(value.openCount) || 0,
+        lastOpenedAt: value.lastOpenedAt ?? null,
+        pinned: Boolean(value.pinned),
+        favorite: Boolean(value.favorite)
+      };
+      return acc;
+    }, {});
+  } catch {
+    return {};
+  }
+};
+
+const formatRelativeTime = (dateInput: string | null): string => {
+  if (!dateInput) return 'ยังไม่เคยใช้งาน';
+
+  const date = new Date(dateInput);
+  const deltaMs = date.getTime() - Date.now();
+  const deltaMinutes = Math.round(deltaMs / (1000 * 60));
+  const formatter = new Intl.RelativeTimeFormat('th', { numeric: 'auto' });
+
+  if (Math.abs(deltaMinutes) < 60) {
+    return formatter.format(deltaMinutes, 'minute');
+  }
+
+  const deltaHours = Math.round(deltaMinutes / 60);
+  if (Math.abs(deltaHours) < 24) {
+    return formatter.format(deltaHours, 'hour');
+  }
+
+  const deltaDays = Math.round(deltaHours / 24);
+  return formatter.format(deltaDays, 'day');
+};
+
+const canOpenTool = (status: ToolStatus): boolean => status === 'ready' || status === 'beta';
+
+const statusBadgeClassMap: Record<ToolStatus, string> = {
+  ready: 'border-emerald-300/70 bg-emerald-500/10 text-emerald-700',
+  beta: 'border-amber-300/70 bg-amber-500/10 text-amber-700',
+  coming_soon: 'border-border/80 bg-background/70 text-muted-foreground'
+};
+
+const statusLabelMap: Record<ToolStatus, string> = {
+  ready: 'Ready',
+  beta: 'Beta',
+  coming_soon: 'Coming Soon'
+};
+
 export const HomeView: React.FC<HomeViewProps> = ({ onSelectTool }) => {
+  const [usageMap, setUsageMap] = useState<Record<string, ToolUsageMeta>>(readUsageStorage);
+
   const tools: Tool[] = [
     {
       id: 'loop-api',
       name: 'Loop API Tester',
       description: 'ยิง Loop API เพื่อสร้างข้อมูลทดสอบด้วยการ Config payload ได้ตามต้องการ พร้อมระบบประวัติ',
       icon: <Play className="w-8 h-8" />,
-      color: 'bg-blue-500',
+      accentClass: 'from-sky-500/20 to-cyan-500/20',
+      iconClass: 'bg-sky-500',
+      category: 'API',
       status: 'ready'
     },
     {
@@ -31,15 +124,19 @@ export const HomeView: React.FC<HomeViewProps> = ({ onSelectTool }) => {
       name: 'Mock Data Generator',
       description: 'เครื่องมือสร้างข้อมูลจำลอง (เช่น ชื่อ, ที่อยู่, เบอร์โทร, เลขบัตรประชาชน) ในรูปแบบ JSON หรือ CSV เพื่อเอาไปใช้ยิง API ต่อ',
       icon: <Database className="w-8 h-8" />,
-      color: 'bg-indigo-500',
-      status: 'ready'
+      accentClass: 'from-indigo-500/20 to-blue-500/20',
+      iconClass: 'bg-indigo-500',
+      category: 'Data',
+      status: 'beta'
     },
     {
       id: 'base64-tool',
       name: 'Base64 Encoder/Decoder',
       description: 'เข้ารหัสและถอดรหัสข้อความเป็นรูปแบบ Base64 อย่างรวดเร็ว รองรับข้อความภาษาไทย',
       icon: <Link className="w-8 h-8" />,
-      color: 'bg-rose-500',
+      accentClass: 'from-rose-500/20 to-orange-500/20',
+      iconClass: 'bg-rose-500',
+      category: 'Utility',
       status: 'ready'
     },
     {
@@ -47,7 +144,9 @@ export const HomeView: React.FC<HomeViewProps> = ({ onSelectTool }) => {
       name: 'Performance Test',
       description: 'ทดสอบประสิทธิภาพของ API ด้วยการจำลองการโหลดรันจากผู้ใช้จำนวนมาก',
       icon: <Zap className="w-8 h-8" />,
-      color: 'bg-amber-500',
+      accentClass: 'from-amber-500/20 to-orange-500/20',
+      iconClass: 'bg-amber-500',
+      category: 'Performance',
       status: 'coming_soon'
     },
     {
@@ -55,7 +154,9 @@ export const HomeView: React.FC<HomeViewProps> = ({ onSelectTool }) => {
       name: 'JSON Utilities',
       description: 'เครื่องมือจัดรูปแบบ (Formatter), ย่อขนาด (Minify) และเปรียบเทียบความแตกต่าง (Diff) ของ JSON',
       icon: <FileJson className="w-8 h-8" />,
-      color: 'bg-emerald-500',
+      accentClass: 'from-emerald-500/20 to-teal-500/20',
+      iconClass: 'bg-emerald-500',
+      category: 'JSON',
       status: 'ready'
     },
     {
@@ -63,7 +164,9 @@ export const HomeView: React.FC<HomeViewProps> = ({ onSelectTool }) => {
       name: 'Excel Viewer',
       description: 'ตัวช่วยอ่านไฟล์ Excel และ CSV พร้อมระบบค้นหาข้อมูล และแปลงเป็น JSON ได้ทันที',
       icon: <FileSpreadsheet className="w-8 h-8" />,
-      color: 'bg-emerald-600',
+      accentClass: 'from-emerald-600/20 to-lime-500/20',
+      iconClass: 'bg-emerald-600',
+      category: 'Spreadsheet',
       status: 'ready'
     },
     {
@@ -71,63 +174,185 @@ export const HomeView: React.FC<HomeViewProps> = ({ onSelectTool }) => {
       name: 'Product SQL Generator',
       description: 'เครื่องมือช่วยสร้าง SQL (Select / Update / Rollback) สำหรับจัดการข้อมูลสินค้าจำนวนมากจากรหัส SKU',
       icon: <Database className="w-8 h-8" />,
-      color: 'bg-orange-500',
+      accentClass: 'from-orange-500/20 to-amber-500/20',
+      iconClass: 'bg-orange-500',
+      category: 'SQL',
       status: 'ready'
     }
   ];
 
+  useEffect(() => {
+    localStorage.setItem(TOOL_USAGE_STORAGE_KEY, JSON.stringify(usageMap));
+  }, [usageMap]);
+
+  const withUsageMeta = (toolId: string): ToolUsageMeta => usageMap[toolId] ?? defaultUsageMeta;
+
+  const updateUsageMeta = (toolId: string, updater: (prev: ToolUsageMeta) => ToolUsageMeta) => {
+    setUsageMap((prev) => ({
+      ...prev,
+      [toolId]: updater(prev[toolId] ?? defaultUsageMeta)
+    }));
+  };
+
+  const openTool = (tool: Tool) => {
+    if (!canOpenTool(tool.status)) return;
+
+    updateUsageMeta(tool.id, (prev) => ({
+      ...prev,
+      openCount: prev.openCount + 1,
+      lastOpenedAt: new Date().toISOString()
+    }));
+    onSelectTool(tool.id);
+  };
+
+  const toggleFavorite = (toolId: string) => {
+    updateUsageMeta(toolId, (prev) => ({ ...prev, favorite: !prev.favorite }));
+  };
+
+  const togglePin = (toolId: string) => {
+    updateUsageMeta(toolId, (prev) => ({ ...prev, pinned: !prev.pinned }));
+  };
+
+  const sortedTools = useMemo(() => {
+    const statusPriority: Record<ToolStatus, number> = { ready: 0, beta: 1, coming_soon: 2 };
+
+    return [...tools].sort((a, b) => {
+      const aMeta = withUsageMeta(a.id);
+      const bMeta = withUsageMeta(b.id);
+
+      if (aMeta.pinned !== bMeta.pinned) return aMeta.pinned ? -1 : 1;
+      if (aMeta.favorite !== bMeta.favorite) return aMeta.favorite ? -1 : 1;
+      if (statusPriority[a.status] !== statusPriority[b.status]) return statusPriority[a.status] - statusPriority[b.status];
+      return a.name.localeCompare(b.name);
+    });
+  }, [tools, usageMap]);
+
+  const filteredTools = sortedTools;
+
+  const quickTools = useMemo(() => {
+    const ranked = tools
+      .filter((tool) => canOpenTool(tool.status))
+      .map((tool) => ({ tool, usage: withUsageMeta(tool.id) }))
+      .sort((a, b) => {
+        if (a.usage.pinned !== b.usage.pinned) return a.usage.pinned ? -1 : 1;
+        if (a.usage.openCount !== b.usage.openCount) return b.usage.openCount - a.usage.openCount;
+        return a.tool.name.localeCompare(b.tool.name);
+      })
+      .slice(0, 3);
+
+    return ranked.map((item) => item.tool);
+  }, [tools, usageMap]);
+
   return (
-    <div className="container mx-auto p-4 md:p-8 space-y-12 max-w-6xl">
-      <div className="text-center space-y-4 max-w-3xl mx-auto">
-        <h1 className="text-5xl font-extrabold tracking-tight text-foreground">
-          Welcome to <span className="text-primary">Test Tools Hub</span>
-        </h1>
-        <p className="text-xl text-muted-foreground">
-          รวมเครื่องมืออเนกประสงค์สำหรับช่วยเหลือนักพัฒนาและ Tester เพื่อให้การทำงานง่ายและรวดเร็วยิ่งขึ้น
-        </p>
+    <section className="container mx-auto max-w-6xl px-4 py-6 sm:py-8 md:py-10 pb-24 md:pb-10">
+      <div className="grid grid-cols-1 gap-4 sm:gap-5 lg:grid-cols-3">
+        {filteredTools.map((tool) => {
+          const usage = withUsageMeta(tool.id);
+          const hasRecent = Boolean(usage.lastOpenedAt);
+          const isOpenable = canOpenTool(tool.status);
+
+          return (
+            <Card
+              key={tool.id}
+              className="group relative overflow-hidden border border-border/70 bg-card/85 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+            >
+              <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${tool.accentClass} opacity-80`} />
+              <CardHeader className="relative z-10 pb-1">
+                <div className="mb-3 flex items-start justify-between gap-3">
+                  <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl ${tool.iconClass} text-white shadow-md shadow-black/10 transition-transform duration-300 group-hover:scale-105`}>
+                    {tool.icon}
+                  </div>
+                  <div className="flex flex-col items-end gap-1">
+                    <Badge variant="outline" className="h-7 rounded-full border-border/80 bg-background/70 px-3 text-[11px] uppercase tracking-[0.12em]">
+                      {tool.category}
+                    </Badge>
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        'h-7 rounded-full px-3 text-[11px] uppercase tracking-[0.12em]',
+                        statusBadgeClassMap[tool.status]
+                      )}
+                    >
+                      {statusLabelMap[tool.status]}
+                    </Badge>
+                  </div>
+                </div>
+                <CardTitle className="text-xl font-semibold sm:text-2xl">{tool.name}</CardTitle>
+                <CardDescription className="mt-1 text-sm leading-relaxed sm:text-base">
+                  {tool.description}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="relative z-10 pt-2">
+                <div className="mb-3 grid grid-cols-3 gap-2">
+                  <Button
+                    variant={usage.favorite ? 'default' : 'outline'}
+                    className="h-11 px-2 text-xs"
+                    onClick={() => toggleFavorite(tool.id)}
+                  >
+                    <Star className="mr-1 h-3.5 w-3.5" />
+                    Favorite
+                  </Button>
+                  <Button
+                    variant={usage.pinned ? 'default' : 'outline'}
+                    className="h-11 px-2 text-xs"
+                    onClick={() => togglePin(tool.id)}
+                  >
+                    <Pin className="mr-1 h-3.5 w-3.5" />
+                    Pin
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="h-11 px-2 text-xs"
+                    disabled={!hasRecent || !isOpenable}
+                    onClick={() => openTool(tool)}
+                  >
+                    <Clock3 className="mr-1 h-3.5 w-3.5" />
+                    Recent
+                  </Button>
+                </div>
+
+                {isOpenable ? (
+                  <Button
+                    onClick={() => openTool(tool)}
+                    className="h-11 w-full group/btn text-sm font-semibold sm:text-base"
+                  >
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    เปิดใช้งาน
+                    <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover/btn:translate-x-1" />
+                  </Button>
+                ) : (
+                  <Button
+                    disabled
+                    variant="secondary"
+                    className="h-11 w-full text-sm font-semibold sm:text-base"
+                  >
+                    เร็วๆ นี้
+                  </Button>
+                )}
+
+                <p className="mt-2 text-xs text-muted-foreground">
+                  ใช้งานล่าสุด: {formatRelativeTime(usage.lastOpenedAt)} | เปิดแล้ว {usage.openCount} ครั้ง
+                </p>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {tools.map((tool) => (
-          <Card 
-            key={tool.id} 
-            className="group relative overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 border-border/50 bg-background/50 backdrop-blur-sm"
-          >
-            <div className={`h-2 w-full ${tool.color} opacity-80`} />
-            <CardHeader className="pb-4">
-              <div className={`w-14 h-14 rounded-2xl ${tool.color} flex items-center justify-center text-white mb-4 shadow-lg shadow-black/10 transition-transform group-hover:scale-110 duration-300`}>
-                {tool.icon}
-              </div>
-              <CardTitle className="text-2xl">{tool.name}</CardTitle>
-              <CardDescription className="text-base line-clamp-2">
-                {tool.description}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {tool.status === 'ready' ? (
-                <Button 
-                  onClick={() => onSelectTool(tool.id)}
-                  className="w-full h-11 group/btn"
-                >
-                  เปิดใช้งาน
-                  <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover/btn:translate-x-1" />
-                </Button>
-              ) : (
-                <Button 
-                  disabled 
-                  variant="secondary"
-                  className="w-full h-11"
-                >
-                  เร็วๆ นี้
-                </Button>
-              )}
-            </CardContent>
-            
-            {/* Subtle light effect */}
-            <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-          </Card>
-        ))}
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border/80 bg-background/95 p-2 backdrop-blur md:hidden">
+        <div className="container mx-auto grid max-w-6xl grid-cols-3 gap-2">
+          {quickTools.map((tool) => (
+            <Button
+              key={tool.id}
+              variant="outline"
+              className="h-11 px-2 text-xs"
+              onClick={() => openTool(tool)}
+            >
+              <span className="truncate">{tool.name}</span>
+            </Button>
+          ))}
+        </div>
       </div>
-    </div>
+    </section>
   );
 };

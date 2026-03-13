@@ -6,32 +6,40 @@ import { Base64ToolView } from './features/base64-tool/Base64ToolView'
 import { JsonToolView } from './features/json-tool/JsonToolView'
 import { ExcelToolView } from './features/excel-tool/ExcelToolView'
 import { ProductQueryView } from './features/product-query/ProductQueryView'
+import { Button } from '@/components/common/Button'
 import { Toaster } from 'sonner'
 
 function App() {
   const navigate = useNavigate()
 
   return (
-    <div className="min-h-screen bg-background text-foreground selection:bg-primary/30 flex flex-col">
+    <div className="relative flex min-h-screen flex-col bg-background text-foreground selection:bg-primary/30">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute left-[-5rem] top-10 h-52 w-52 rounded-full bg-primary/10 blur-3xl animate-float-slow" />
+        <div className="absolute right-[-4rem] top-40 h-52 w-52 rounded-full bg-accent/10 blur-3xl animate-float-slow" />
+      </div>
       <Toaster position="top-right" richColors expand={false} />
-      <header className="border-b bg-background/50 backdrop-blur-md sticky top-0 z-50">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+      <header className="sticky top-0 z-50 border-b border-border/70 bg-background/85 backdrop-blur-md">
+        <div className="container relative mx-auto flex h-16 items-center justify-between px-4">
           <div 
-            className="flex items-center gap-2 cursor-pointer group"
+            className="group flex cursor-pointer items-center gap-2"
             onClick={() => navigate('/')}
           >
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-lg shadow-primary/20 transition-transform group-hover:scale-105">
-              <span className="text-white font-bold text-xl">T</span>
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/20 transition-transform group-hover:scale-105">
+              <span className="text-xl font-bold text-white">T</span>
             </div>
-            <span className="font-bold text-xl hidden sm:inline-block">Test Tools Hub</span>
+            <div className="hidden sm:block">
+              <p className="text-sm font-semibold uppercase tracking-[0.12em] text-muted-foreground">Workspace</p>
+              <p className="text-base font-bold">Test Tools Hub</p>
+            </div>
           </div>
-          <div className="flex items-center gap-4 text-xs text-muted-foreground font-medium uppercase tracking-widest opacity-50">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground/90">
             Developer Utilities
           </div>
         </div>
       </header>
       
-      <main className="flex-1">
+      <main className="relative z-10 flex-1">
         <Routes>
           <Route path="/" element={<HomeView onSelectTool={(id) => {
             if (id === 'json-parser') navigate('/json-tool');
@@ -45,22 +53,22 @@ function App() {
           <Route path="/excel-tool" element={<ExcelToolView />} />
           <Route path="/product-query" element={<ProductQueryView />} />
           <Route path="*" element={
-            <div className="flex flex-col items-center justify-center py-24 space-y-4">
+            <div className="container mx-auto flex flex-col items-center justify-center space-y-4 px-4 py-20 text-center">
               <h2 className="text-3xl font-bold">Coming Soon</h2>
               <p className="text-muted-foreground">This tool is still under development.</p>
-              <button 
+              <Button
                 onClick={() => navigate('/')}
-                className="px-4 py-2 bg-primary text-white rounded-lg"
+                className="h-11 px-6"
               >
                 Go Back Home
-              </button>
+              </Button>
             </div>
           } />
         </Routes>
       </main>
       
-      <footer className="py-12 border-t mt-auto">
-        <div className="container mx-auto px-4 text-center text-muted-foreground text-sm">
+      <footer className="relative z-10 mt-auto border-t border-border/70 py-8">
+        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
           <p>© 2026 Test Tools Hub. Built for testers and developers.</p>
         </div>
       </footer>

@@ -249,6 +249,15 @@ WHERE "${whereColumn}" IN (
         </div>
       </div>
 
+      <Card className="border-dashed border-primary/25 bg-primary/[0.02]">
+        <CardContent className="py-4 text-sm text-muted-foreground space-y-1">
+          <p className="font-semibold text-foreground">Quick Start</p>
+          <p>1. ใส่ชื่อ Table/Column และวางข้อมูล SKU</p>
+          <p>2. คัดลอก Select/Update Query ไปใช้งาน</p>
+          <p>3. วางผลลัพธ์ DB เพื่อสร้าง Rollback และ Verify</p>
+        </CardContent>
+      </Card>
+
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-6">
         <TabsList className="bg-secondary/30 p-1 rounded-xl h-auto self-start border border-border/50">
           <TabsTrigger value="generator" className="gap-2 px-6 py-2.5 rounded-lg transition-all data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm">

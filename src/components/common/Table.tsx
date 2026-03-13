@@ -9,7 +9,6 @@ import {
   TableCell as ShadcnTableCell, 
   TableCaption as ShadcnTableCaption 
 } from "@/components/ui/table";
-import { cn } from "@/lib/utils";
 
 export const Table = React.forwardRef<HTMLTableElement, React.ComponentProps<typeof ShadcnTable>>(
   ({ className, ...props }, ref) => (

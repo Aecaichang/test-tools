@@ -73,6 +73,15 @@ export const Base64ToolView: React.FC = () => {
         <p className="text-muted-foreground font-medium">เข้ารหัสและถอดรหัสข้อความเป็นรูปแบบ Base64 อย่างรวดเร็วและปลอดภัย</p>
       </div>
 
+      <Card className="border-dashed border-primary/25 bg-primary/[0.02]">
+        <CardContent className="py-4 text-sm text-muted-foreground space-y-1">
+          <p className="font-semibold text-foreground">Quick Start</p>
+          <p>1. วางข้อความในช่อง Input</p>
+          <p>2. เลือก Encode หรือ Decode</p>
+          <p>3. คัดลอกผลลัพธ์จากฝั่ง Output</p>
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
         {/* Left Side: Input */}
         <div className="space-y-6 flex flex-col">

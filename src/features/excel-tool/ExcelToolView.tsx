@@ -112,6 +112,15 @@ export const ExcelToolView: React.FC = () => {
         </div>
       </div>
 
+      <Card className="mb-6 border-dashed border-primary/25 bg-primary/[0.02]">
+        <CardContent className="py-4 text-sm text-muted-foreground space-y-1">
+          <p className="font-semibold text-foreground">Quick Start</p>
+          <p>1. อัปโหลดไฟล์ .xlsx/.xls/.csv</p>
+          <p>2. เลือก Sheet และค้นหาข้อมูล</p>
+          <p>3. กด Download JSON เพื่อนำข้อมูลไปใช้ต่อ</p>
+        </CardContent>
+      </Card>
+
       {!data ? (
         <Card className="glow-card border-dashed border-2 border-primary/20 bg-primary/[0.01] hover:bg-primary/[0.03] transition-all duration-500 group">
           <CardContent className="flex flex-col items-center justify-center py-24 gap-6">

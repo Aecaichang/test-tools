@@ -13,6 +13,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Select, type SelectOption } from '@/components/common/Select';
 
 interface FieldDefinition {
   id: string;
@@ -20,6 +21,15 @@ interface FieldDefinition {
   type: 'name' | 'phone' | 'email' | 'id_card' | 'address' | 'number' | 'custom';
   customValue?: string;
 }
+
+const FIELD_TYPE_OPTIONS: SelectOption[] = [
+  { value: "name", label: "Full Name" },
+  { value: "phone", label: "Phone Number" },
+  { value: "email", label: "Email Address" },
+  { value: "id_card", label: "Thai ID Card" },
+  { value: "address", label: "Address" },
+  { value: "number", label: "Random Number" },
+];
 
 export const MockGeneratorView: React.FC = () => {
   const [fields, setFields] = useState<FieldDefinition[]>([
@@ -128,6 +138,15 @@ export const MockGeneratorView: React.FC = () => {
         </div>
       </div>
 
+      <Card className="border-dashed border-primary/25 bg-primary/[0.02]">
+        <CardContent className="py-4 text-sm text-muted-foreground space-y-1">
+          <p className="font-semibold text-foreground">Quick Start</p>
+          <p>1. เพิ่ม/แก้ฟิลด์ที่ต้องการใน Schema</p>
+          <p>2. ตั้งจำนวน Record Count</p>
+          <p>3. กด Generate แล้ว Copy หรือ Download</p>
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
         {/* Left Side: Config */}
         <div className="space-y-6 flex flex-col">
@@ -149,20 +168,12 @@ export const MockGeneratorView: React.FC = () => {
                       placeholder="Field Name"
                       className="flex-1 h-10"
                     />
-                    <select
+                    <Select
                       value={field.type}
-                      onChange={(e) => updateField(field.id, { type: e.target.value as FieldDefinition['type'] })}
-                      className="h-10 bg-background border border-input rounded-md px-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 w-40"
-                      aria-label="Field type"
-                      title="Select field type"
-                    >
-                      <option value="name">Full Name</option>
-                      <option value="phone">Phone Number</option>
-                      <option value="email">Email Address</option>
-                      <option value="id_card">Thai ID Card</option>
-                      <option value="address">Address</option>
-                      <option value="number">Random Number</option>
-                    </select>
+                      onChange={(val) => updateField(field.id, { type: val as FieldDefinition['type'] })}
+                      options={FIELD_TYPE_OPTIONS}
+                      className="h-10 w-40"
+                    />
                     <Button
                       variant="ghost"
                       size="sm"

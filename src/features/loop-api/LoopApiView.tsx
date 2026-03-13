@@ -1,29 +1,23 @@
 import * as React from 'react';
-import { useState, useEffect } from 'react';
-import { Zap } from 'lucide-react';
+import { useEffect } from 'react';
+import { Zap, History, LayoutDashboard, Settings2, Activity, Gauge, Archive } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/common/Card';
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@/components/ui/tabs";
-
-// Sub-components
+} from '@/components/ui/tabs';
+import { useLoopApi } from './hooks/useLoopApi';
 import { TesterPanel } from './components/TesterPanel';
 import { ResultsPanel } from './components/ResultsPanel';
-import { HistoryPanel } from './components/HistoryPanel';
 import { ExecutionControls } from './components/ExecutionControls';
-
-// Custom Hook
-import { useLoopApi } from './hooks/useLoopApi';
-import { ApiLog } from './types';
+import { HistoryPanel } from './components/HistoryPanel';
 
 export const LoopApiView: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('tester');
-  const [copied, setCopied] = useState(false);
+  const [activeTab, setActiveTab] = React.useState('tester');
 
   const {
-    // Tester
     curlInput, setCurlInput,
     loopCount, setLoopCount,
     parsedData, fieldConfigs,
@@ -33,132 +27,170 @@ export const LoopApiView: React.FC = () => {
     handleParse, executeLoop,
     updateFieldConfig, removeFieldConfig, clearResults,
     useProxy, setUseProxy,
-    
-    // History
     historyItems, isLoadingHistory,
     fetchHistory, deleteHistoryItem,
     deleteAllHistory, loadHistoryItem
   } = useLoopApi();
 
   useEffect(() => {
-    if (activeTab === 'history') {
-      fetchHistory();
-    }
-  }, [activeTab, fetchHistory]);
-
-  const onCopy = () => {
-    const text = JSON.stringify(results, null, 2);
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const handleLoadHistory = (item: ApiLog) => {
-    loadHistoryItem(item);
-    setActiveTab('tester');
-  };
+    fetchHistory();
+  }, [fetchHistory]);
 
   return (
-    <div className="relative min-h-screen bg-background overflow-x-hidden w-full">
-      {/* Background Decorations */}
-      <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-primary/[0.03] rounded-full blur-[150px] -z-10 translate-x-1/2 -translate-y-1/2 pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[800px] h-[800px] bg-secondary/[0.05] rounded-full blur-[150px] -z-10 -translate-x-1/3 translate-y-1/3 pointer-events-none" />
-      
-      <div className="w-full max-w-[1400px] mx-auto p-4 md:p-12 space-y-12 animate-in fade-in duration-1000 relative z-10">
-        {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 border-b border-border/20 pb-16">
-          <div className="space-y-6">
-            <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-primary/10 text-primary text-[11px] font-black uppercase tracking-[0.2em] border border-primary/20 shadow-sm">
-              <Zap className="w-3.5 h-3.5 fill-current" />
-              Developer Tool Suite
-            </div>
-            <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-foreground leading-none">
-              Loop <span className="text-primary">API</span> Tester
-            </h1>
-            <p className="text-muted-foreground font-medium text-xl max-w-2xl leading-relaxed opacity-70">
-              ยิง Loop API เพื่อสร้างข้อมูลทดสอบด้วยการ Config payload และ Query String ได้ตามต้องการ
-            </p>
-          </div>
-        </div>
-
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-12">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-8 w-full">
-            <TabsList className="bg-secondary/20 p-2 rounded-[1.5rem] h-auto self-start border border-border shadow-inner backdrop-blur-md">
-              <TabsTrigger 
-                value="tester" 
-                className="rounded-2xl px-10 py-4 text-sm font-black transition-all data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-xl tracking-tight uppercase italic hover:bg-background/50"
-              >
-                Engine Tester
-              </TabsTrigger>
-              <TabsTrigger 
-                value="history" 
-                className="rounded-2xl px-10 py-4 text-sm font-black transition-all data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-xl tracking-tight uppercase italic hover:bg-background/50"
-              >
-                Launch History
-              </TabsTrigger>
-            </TabsList>
-            
-            {/* Real-time status badge */}
-            <div className="flex items-center gap-4 bg-background border border-border px-6 py-3 rounded-2xl shadow-xl shadow-black/5 animate-pulse-subtle">
-               <div className="w-2.5 h-2.5 rounded-full bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
-               <span className="text-[11px] font-black uppercase tracking-[0.1em] text-muted-foreground">Network Engine Active</span>
-            </div>
-          </div>
-
-          <TabsContent value="tester" className="w-full mt-0">
-            <div className="flex flex-col lg:flex-row gap-8 items-stretch w-full">
-              <div className="space-y-8 flex flex-col w-full lg:w-1/2">
-                <TesterPanel
-                  curlInput={curlInput}
-                  setCurlInput={setCurlInput}
-                  onParse={handleParse}
-                  error={error}
-                  isRunning={isRunning}
-                  progress={progress}
-                  parsedData={parsedData}
-                  editableHeaders={editableHeaders}
-                  setEditableHeaders={setEditableHeaders}
-                  fieldConfigs={fieldConfigs}
-                  updateFieldConfig={updateFieldConfig}
-                  removeFieldConfig={removeFieldConfig}
-                  useProxy={useProxy}
-                  setUseProxy={setUseProxy}
-                />
-                
-                <ExecutionControls
-                  loopCount={loopCount}
-                  setLoopCount={setLoopCount}
-                  isRunning={isRunning}
-                  progress={progress}
-                  executeLoop={executeLoop}
-                  parsedData={parsedData}
-                />
+    <div className="min-h-screen bg-[#f8fafc] transition-colors duration-500">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <div className="mx-auto max-w-[1600px] space-y-6 p-4 sm:p-6 md:space-y-8 md:p-8">
+          <header className="space-y-5">
+            <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+              <div className="space-y-3">
+                <div className="inline-flex items-center gap-2.5 rounded-xl border border-primary/15 bg-primary/5 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-primary">
+                  <Zap className="h-3.5 w-3.5 fill-current" />
+                  Network Automation Engine
+                </div>
+                <h1 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl md:text-5xl">
+                  Loop API <span className="text-primary italic">Tester</span>
+                </h1>
+                <p className="max-w-3xl text-sm font-medium leading-relaxed text-muted-foreground sm:text-base">
+                  ยิง API ซ้ำพร้อม Smart Injection และดูผลลัพธ์แบบเรียลไทม์ในหน้าเดียว เหมาะกับงาน data seeding, load check และ regression test
+                </p>
               </div>
 
-              <div className="w-full lg:w-1/2">
-                <div className="lg:sticky lg:top-24">
-                  <ResultsPanel
-                    results={results}
-                    onClear={clearResults}
-                    onCopy={onCopy}
-                    copied={copied}
+              <TabsList className="grid h-12 w-full grid-cols-2 rounded-xl border border-border/60 bg-secondary/30 p-1 xl:w-[360px]">
+                <TabsTrigger
+                  value="tester"
+                  className="gap-2 rounded-lg text-xs font-bold uppercase tracking-wider data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm"
+                >
+                  <LayoutDashboard className="h-4 w-4" />
+                  Workbench
+                </TabsTrigger>
+                <TabsTrigger
+                  value="history"
+                  className="gap-2 rounded-lg text-xs font-bold uppercase tracking-wider data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm"
+                >
+                  <History className="h-4 w-4" />
+                  Archives
+                </TabsTrigger>
+              </TabsList>
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+              <Card className="border-primary/20 bg-primary/[0.03]">
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center gap-2 text-sm font-bold">
+                    <Gauge className="h-4 w-4 text-primary" />
+                    Execution Status
+                  </CardTitle>
+                  <CardDescription>สถานะการยิง API ปัจจุบัน</CardDescription>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <p className="text-sm font-semibold text-foreground">{isRunning ? 'Running...' : 'Idle'}</p>
+                </CardContent>
+              </Card>
+
+              <Card className="border-border/60 bg-card/80">
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center gap-2 text-sm font-bold">
+                    <Activity className="h-4 w-4 text-primary" />
+                    Results
+                  </CardTitle>
+                  <CardDescription>จำนวนผลลัพธ์ในรอบล่าสุด</CardDescription>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <p className="text-sm font-semibold text-foreground">{results.length} items</p>
+                </CardContent>
+              </Card>
+
+              <Card className="border-border/60 bg-card/80">
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center gap-2 text-sm font-bold">
+                    <Archive className="h-4 w-4 text-primary" />
+                    History
+                  </CardTitle>
+                  <CardDescription>ข้อมูลย้อนหลังที่บันทึกไว้</CardDescription>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <p className="text-sm font-semibold text-foreground">{historyItems.length} logs</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card className="border-dashed border-primary/25 bg-primary/[0.02]">
+              <CardContent className="space-y-1 py-4 text-sm text-muted-foreground">
+                <p className="font-semibold text-foreground">Quick Start</p>
+                <p>1. วาง cURL และกด Parse</p>
+                <p>2. ปรับ payload/header ตามต้องการ</p>
+                <p>3. ตั้งจำนวน loop แล้วกด Execute</p>
+              </CardContent>
+            </Card>
+          </header>
+
+          <main>
+            <TabsContent value="tester" className="mt-0 border-none p-0 outline-none focus:outline-none focus-visible:outline-none">
+              <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-12">
+                <div className="space-y-8 lg:col-span-12 xl:col-span-7">
+                  <div className="flex items-center gap-3 px-1">
+                    <div className="h-6 w-1.5 rounded-full bg-primary" />
+                    <h2 className="flex items-center gap-2 text-xl font-black tracking-tight text-foreground">
+                      <Settings2 className="h-5 w-5 text-muted-foreground/40" />
+                      Configuration
+                    </h2>
+                  </div>
+
+                  <TesterPanel
+                    curlInput={curlInput}
+                    setCurlInput={setCurlInput}
+                    onParse={handleParse}
+                    error={error}
+                    isRunning={isRunning}
+                    parsedData={parsedData}
+                    editableHeaders={editableHeaders}
+                    setEditableHeaders={setEditableHeaders}
+                    fieldConfigs={fieldConfigs}
+                    updateFieldConfig={updateFieldConfig}
+                    removeFieldConfig={removeFieldConfig}
+                    useProxy={useProxy}
+                    setUseProxy={setUseProxy}
                   />
                 </div>
-              </div>
-            </div>
-          </TabsContent>
 
-          <TabsContent value="history" className="w-full mt-0">
-            <HistoryPanel
-              historyItems={historyItems}
-              isLoading={isLoadingHistory}
-              onLoad={handleLoadHistory}
-              onDelete={deleteHistoryItem}
-              onDeleteAll={deleteAllHistory}
-            />
-          </TabsContent>
-        </Tabs>
-      </div>
+                <div className="space-y-8 lg:col-span-12 xl:col-span-5">
+                  <div className="xl:sticky xl:top-24 space-y-8">
+                    <div className="flex items-center gap-3 px-1">
+                      <div className="h-6 w-1.5 rounded-full bg-primary" />
+                      <h2 className="flex items-center gap-2 text-xl font-black tracking-tight text-foreground">
+                        <Activity className="h-5 w-5 text-muted-foreground/40" />
+                        Execution
+                      </h2>
+                    </div>
+
+                    <ExecutionControls
+                      loopCount={loopCount}
+                      setLoopCount={setLoopCount}
+                      onExecute={executeLoop}
+                      onClear={clearResults}
+                      isRunning={isRunning}
+                      progress={progress}
+                      canExecute={!!parsedData}
+                    />
+
+                    <ResultsPanel results={results} />
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="history" className="mt-0 border-none p-0 focus:outline-none focus-visible:outline-none">
+              <HistoryPanel
+                historyItems={historyItems}
+                isLoading={isLoadingHistory}
+                onLoad={loadHistoryItem}
+                onDelete={deleteHistoryItem}
+                onDeleteAll={deleteAllHistory}
+              />
+            </TabsContent>
+          </main>
+        </div>
+      </Tabs>
     </div>
   );
 };

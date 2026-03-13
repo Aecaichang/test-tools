@@ -3,6 +3,7 @@ import { Code2, FileCode, GitCompare } from 'lucide-react';
 import { JsonFormatter } from './components/JsonFormatter';
 import { JsonDiff } from './components/JsonDiff';
 import { cn } from '@/lib/utils';
+import { Card, CardContent } from '@/components/common/Card';
 
 type SubView = 'formatter' | 'diff';
 
@@ -51,6 +52,15 @@ export const JsonToolView: React.FC = () => {
           </button>
         </div>
       </div>
+
+      <Card className="mb-6 border-dashed border-primary/25 bg-primary/[0.02]">
+        <CardContent className="py-4 text-sm text-muted-foreground space-y-1">
+          <p className="font-semibold text-foreground">Quick Start</p>
+          <p>1. เลือกโหมด Formatter หรือ JSON Diff</p>
+          <p>2. วาง JSON ที่ต้องการตรวจสอบ</p>
+          <p>3. คัดลอกผลลัพธ์ที่จัดรูปแบบแล้ว</p>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 gap-8">
         {activeSubView === 'formatter' ? <JsonFormatter /> : <JsonDiff />}
