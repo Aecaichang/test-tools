@@ -56,21 +56,21 @@ export const TesterPanel: React.FC<TesterPanelProps> = ({
   setUseProxy,
 }) => {
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* CURL Input Section */}
-      <Card className="relative p-6 rounded-[2.5rem] border-border/40 shadow-xl bg-background/50 backdrop-blur-xl overflow-hidden group">
+      <Card className="group relative overflow-hidden rounded-2xl border-border/60 bg-card p-5 shadow-sm">
         <div className="absolute top-0 left-0 w-1 h-full bg-primary/20 group-hover:bg-primary transition-colors duration-500" />
         
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-primary/10 text-primary">
+              <div className="rounded-xl bg-primary/10 p-2 text-primary">
                 <Terminal className="w-4 h-4" />
               </div>
-              <h3 className="text-sm font-black uppercase tracking-widest text-foreground/80">CURL Command</h3>
+              <h3 className="text-sm font-bold uppercase tracking-widest text-foreground/80">CURL Command</h3>
             </div>
             <div className="flex items-center gap-2">
-               <Badge variant="outline" className="rounded-lg text-[10px] font-bold border-primary/20 text-primary bg-primary/5">
+               <Badge variant="outline" className="h-6 rounded-lg border-primary/20 bg-primary/5 px-2 text-[10px] font-bold text-primary">
                  AUTO-DETECT
                </Badge>
             </div>
@@ -81,20 +81,20 @@ export const TesterPanel: React.FC<TesterPanelProps> = ({
               value={curlInput}
               onChange={(e) => setCurlInput(e.target.value)}
               placeholder="Paste your cURL command here..."
-              className="w-full h-48 p-6 rounded-3xl bg-secondary/20 border-2 border-transparent focus:border-primary/20 focus:bg-background transition-all outline-none font-mono text-sm resize-none custom-scrollbar leading-relaxed"
+              className="custom-scrollbar h-48 w-full resize-none rounded-2xl border border-border/60 bg-secondary/20 p-4 font-mono text-sm leading-relaxed outline-none transition-all focus:border-primary/20 focus:bg-background"
             />
             <Button
               onClick={onParse}
               disabled={!curlInput || isRunning}
-              className="absolute bottom-4 right-4 h-12 px-6 rounded-2xl font-black gap-2 shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
+              className="absolute bottom-3 right-3 h-11 rounded-xl px-5 text-sm font-semibold shadow-sm"
             >
               <Sparkles className="w-4 h-4" />
-              PARSE COMMAND
+              Parse Command
             </Button>
           </div>
 
           {error && (
-            <div className="flex items-center gap-3 p-4 rounded-2xl bg-destructive/5 border border-destructive/10 text-destructive text-sm font-medium animate-in slide-in-from-top-2">
+            <div className="animate-in slide-in-from-top-2 flex items-center gap-3 rounded-xl border border-destructive/20 bg-destructive/5 p-3 text-sm font-medium text-destructive">
               <AlertCircle className="w-4 h-4" />
               {error}
             </div>
@@ -103,19 +103,19 @@ export const TesterPanel: React.FC<TesterPanelProps> = ({
       </Card>
 
       {parsedData && (
-        <div className="grid grid-cols-1 gap-8 animate-in fade-in slide-in-from-bottom-5 duration-700">
+        <div className="animate-in fade-in slide-in-from-bottom-5 grid grid-cols-1 gap-6 duration-500">
           {/* Endpoint Info */}
-          <div className="flex items-center gap-4 p-5 rounded-3xl bg-primary/5 border border-primary/10">
-             <div className="w-12 h-12 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center font-black text-xs shadow-lg shadow-primary/20 italic">
+          <div className="flex items-center gap-3 rounded-2xl border border-primary/15 bg-primary/5 p-4">
+             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-xs font-bold italic text-primary-foreground">
                 {parsedData.method}
              </div>
              <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-black text-primary/60 uppercase tracking-widest mb-0.5">Destination URL</p>
-                <p className="text-sm font-mono truncate font-bold text-foreground/70">{parsedData.url}</p>
+                <p className="mb-0.5 text-[10px] font-bold uppercase tracking-widest text-primary/60">Destination URL</p>
+                <p className="truncate font-mono text-sm font-semibold text-foreground/80">{parsedData.url}</p>
              </div>
-             <div className="flex items-center gap-3 px-4 py-2 bg-background rounded-2xl border border-border/50">
-                <Globe className="w-3.5 h-3.5 text-muted-foreground/40" />
-                <span className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">Proxy</span>
+             <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-background px-3 py-2">
+                <Globe className="h-3.5 w-3.5 text-muted-foreground/40" />
+                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Proxy</span>
                 <Checkbox 
                   checked={useProxy} 
                   onChange={(e) => setUseProxy(e.target.checked)} 
@@ -124,29 +124,29 @@ export const TesterPanel: React.FC<TesterPanelProps> = ({
              </div>
           </div>
 
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
             {/* Headers Configuration */}
-            <Card className="p-6 rounded-[2rem] border-border/40 bg-background/50 shadow-sm space-y-6">
+            <Card className="space-y-5 rounded-2xl border-border/60 bg-card p-4 shadow-sm">
                <div className="flex items-center justify-between px-1">
                   <div className="flex items-center gap-3">
                     <div className="w-1.5 h-4 bg-primary/40 rounded-full" />
-                    <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Headers</h4>
+                    <h4 className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground/70">Headers</h4>
                   </div>
-                  <Badge variant="secondary" className="rounded-lg h-5 font-bold text-[9px] px-2">{Object.keys(editableHeaders).length} ACTIVE</Badge>
+                  <Badge variant="secondary" className="h-6 rounded-lg px-2 text-[10px] font-semibold">{Object.keys(editableHeaders).length} Active</Badge>
                </div>
                
                <div className="space-y-2 max-h-[300px] overflow-auto pr-2 custom-scrollbar">
                   {Object.entries(editableHeaders).map(([key, value]) => (
-                    <div key={key} className="group flex items-start gap-3 p-3 rounded-2xl hover:bg-secondary/30 transition-colors border border-transparent hover:border-border/50">
+                    <div key={key} className="group flex items-start gap-3 rounded-xl border border-transparent p-2.5 transition-colors hover:border-border/60 hover:bg-secondary/30">
                        <Input 
                         value={key} 
                         readOnly 
-                        className="h-9 font-mono text-[11px] font-bold bg-transparent border-none text-primary/70 shrink-0 w-[120px]" 
+                        className="h-9 w-[120px] shrink-0 border-none bg-transparent font-mono text-[11px] font-semibold text-primary/70" 
                        />
                        <Input 
                         value={value} 
                         onChange={(e) => setEditableHeaders(prev => ({ ...prev, [key]: e.target.value }))}
-                        className="h-9 font-mono text-[11px] bg-background/50 border-border/50 rounded-xl focus:ring-1 focus:ring-primary/20" 
+                        className="h-9 rounded-lg border-border/60 bg-background/50 font-mono text-[11px]" 
                        />
                     </div>
                   ))}
@@ -154,21 +154,21 @@ export const TesterPanel: React.FC<TesterPanelProps> = ({
             </Card>
 
             {/* Smart Parameters */}
-            <Card className="p-6 rounded-[2rem] border-border/40 bg-background/50 shadow-sm space-y-6">
+            <Card className="space-y-5 rounded-2xl border-border/60 bg-card p-4 shadow-sm">
                <div className="flex items-center justify-between px-1">
                   <div className="flex items-center gap-3">
                     <div className="w-1.5 h-4 bg-orange-500/40 rounded-full" />
-                    <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Smart Injection</h4>
+                    <h4 className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground/70">Smart Injection</h4>
                   </div>
-                  <div className="p-1 px-2 rounded-lg bg-orange-500/10 text-orange-600 text-[9px] font-black flex items-center gap-1.5 uppercase tracking-tighter">
+                  <div className="flex items-center gap-1.5 rounded-lg bg-orange-500/10 px-2 py-1 text-[10px] font-semibold text-orange-600">
                     <Database className="w-3 h-3" />
-                    {fieldConfigs.length} Parameters
+                    {fieldConfigs.length} Params
                   </div>
                </div>
 
                <div className="space-y-3 max-h-[300px] overflow-auto pr-2 custom-scrollbar">
                   {fieldConfigs.map((field) => (
-                    <div key={`${field.location}-${field.key}`} className="flex flex-col gap-3 p-4 rounded-2xl bg-secondary/10 border border-border/40 hover:border-orange-500/20 transition-all">
+                    <div key={`${field.location}-${field.key}`} className="flex flex-col gap-3 rounded-xl border border-border/50 bg-secondary/10 p-3">
                        <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
                              <Checkbox 
@@ -176,32 +176,32 @@ export const TesterPanel: React.FC<TesterPanelProps> = ({
                                 onChange={(e) => updateFieldConfig(field.key, { enabled: e.target.checked })}
                                 className="rounded-lg border-2 border-orange-500/20 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500"
                              />
-                             <span className="text-[11px] font-black font-mono text-foreground/70">{field.key}</span>
+                             <span className="font-mono text-[11px] font-semibold text-foreground/70">{field.key}</span>
                           </div>
-                          <Badge variant="outline" className="text-[8px] font-black tracking-widest uppercase h-4 rounded-md border-orange-500/10 text-orange-600/60">
+                          <Badge variant="outline" className="h-5 rounded-md border-orange-500/20 px-2 text-[9px] font-semibold uppercase tracking-wide text-orange-600/70">
                              {field.location}
                           </Badge>
                        </div>
 
                        {field.enabled ? (
-                          <div className="grid grid-cols-1 gap-2 p-1 animate-in zoom-in-95">
+                          <div className="animate-in zoom-in-95 grid grid-cols-1 gap-2 p-1">
                              <Select
                                 value={field.generator}
                                 onChange={(val) => updateFieldConfig(field.key, { generator: val as any })}
                                 options={GENERATOR_OPTIONS}
-                                className="h-8 text-[10px] font-bold rounded-lg border-orange-500/10"
+                                className="h-9 rounded-lg border-orange-500/20 text-[11px]"
                              />
                              {field.generator === 'none' && (
                                 <Input 
                                   value={String(field.value)} 
                                   onChange={(e) => updateFieldConfig(field.key, { value: e.target.value })}
                                   placeholder="Fixed value..."
-                                  className="h-8 text-[10px] font-mono rounded-lg border-orange-500/10"
+                                  className="h-9 rounded-lg border-orange-500/20 font-mono text-[11px]"
                                 />
                              )}
                           </div>
                        ) : (
-                          <div className="px-1 text-[10px] font-medium text-muted-foreground/40 italic truncate">
+                          <div className="truncate px-1 text-[11px] italic text-muted-foreground/60">
                              Fixed: {String(field.value)}
                           </div>
                        )}

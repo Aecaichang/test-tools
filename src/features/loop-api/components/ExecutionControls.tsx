@@ -30,7 +30,7 @@ export const ExecutionControls: React.FC<ExecutionControlsProps> = ({
   canExecute,
 }) => {
   return (
-    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 p-4 bg-background/50 backdrop-blur-md border border-border/50 rounded-2xl shadow-xl shadow-primary/5">
+    <div className="flex flex-col items-stretch gap-3 rounded-2xl border border-border/60 bg-card p-4 shadow-sm sm:flex-row sm:items-center">
       <div className="flex items-center gap-3 px-2">
         <div className="p-2 rounded-lg bg-primary/10 text-primary">
           <Zap className="w-4 h-4 fill-primary/20" />
@@ -44,7 +44,7 @@ export const ExecutionControls: React.FC<ExecutionControlsProps> = ({
               max={100}
               value={loopCount}
               onChange={(e) => setLoopCount(parseInt(e.target.value) || 1)}
-              className="h-8 w-20 bg-transparent border-none p-0 focus-visible:ring-0 text-lg font-black"
+              className="h-8 w-20 border-none bg-transparent p-0 text-lg font-bold focus-visible:ring-0"
               disabled={isRunning}
             />
           </div>
@@ -57,8 +57,8 @@ export const ExecutionControls: React.FC<ExecutionControlsProps> = ({
         {isRunning ? (
           <div className="flex-1 space-y-2 px-2">
              <div className="flex justify-between items-end">
-                <span className="text-[10px] font-bold text-primary animate-pulse uppercase tracking-wider">Executing Loop...</span>
-                <span className="text-sm font-black text-primary">{progress}%</span>
+                <span className="animate-pulse text-[10px] font-semibold uppercase tracking-wider text-primary">Executing Loop...</span>
+                <span className="text-sm font-bold text-primary">{progress}%</span>
              </div>
              <div className="h-1.5 w-full bg-primary/10 rounded-full overflow-hidden">
                 <div 
@@ -76,11 +76,10 @@ export const ExecutionControls: React.FC<ExecutionControlsProps> = ({
 
       <div className="flex items-center gap-2">
         <Button
-          variant="ghost"
-          size="icon"
+          variant="outline"
           onClick={onClear}
           disabled={isRunning}
-          className="h-12 w-12 rounded-xl text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 transition-colors"
+          className="h-11 min-w-11 rounded-xl border-destructive/20 p-0 text-muted-foreground/70 hover:bg-destructive/10 hover:text-destructive"
           title="Clear Results"
         >
           <Trash2 className="w-5 h-5" />
@@ -90,14 +89,14 @@ export const ExecutionControls: React.FC<ExecutionControlsProps> = ({
           onClick={onExecute}
           disabled={isRunning || !canExecute}
           className={cn(
-            "h-12 px-8 rounded-xl font-bold transition-all duration-500 shadow-lg relative overflow-hidden group/btn",
-            isRunning ? "bg-primary/20 text-primary" : "bg-primary hover:bg-primary/90 text-primary-foreground shadow-primary/20"
+            "group/btn relative h-11 overflow-hidden rounded-xl px-6 text-sm font-semibold transition-all duration-300",
+            isRunning ? "bg-primary/20 text-primary" : "bg-primary text-primary-foreground hover:bg-primary/90"
           )}
         >
           {isRunning ? (
             <div className="flex items-center gap-2">
               <Loader2 className="w-5 h-5 animate-spin" />
-              <span className="tracking-tight uppercase">RUNNING</span>
+              <span className="tracking-tight uppercase">Running</span>
             </div>
           ) : (
             <div className="flex items-center gap-2">

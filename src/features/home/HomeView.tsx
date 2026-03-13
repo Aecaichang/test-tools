@@ -10,10 +10,7 @@ import {
   Database,
   Link,
   FileSpreadsheet,
-  Sparkles,
-  Star,
-  Pin,
-  Clock3
+  Sparkles
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -205,14 +202,6 @@ export const HomeView: React.FC<HomeViewProps> = ({ onSelectTool }) => {
     onSelectTool(tool.id);
   };
 
-  const toggleFavorite = (toolId: string) => {
-    updateUsageMeta(toolId, (prev) => ({ ...prev, favorite: !prev.favorite }));
-  };
-
-  const togglePin = (toolId: string) => {
-    updateUsageMeta(toolId, (prev) => ({ ...prev, pinned: !prev.pinned }));
-  };
-
   const sortedTools = useMemo(() => {
     const statusPriority: Record<ToolStatus, number> = { ready: 0, beta: 1, coming_soon: 2 };
 
@@ -248,16 +237,15 @@ export const HomeView: React.FC<HomeViewProps> = ({ onSelectTool }) => {
       <div className="grid grid-cols-1 gap-4 sm:gap-5 lg:grid-cols-3">
         {filteredTools.map((tool) => {
           const usage = withUsageMeta(tool.id);
-          const hasRecent = Boolean(usage.lastOpenedAt);
           const isOpenable = canOpenTool(tool.status);
 
           return (
             <Card
               key={tool.id}
-              className="group relative overflow-hidden border border-border/70 bg-card/85 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+              className="group relative h-full overflow-hidden border border-border/70 bg-card/85 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
             >
               <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${tool.accentClass} opacity-80`} />
-              <CardHeader className="relative z-10 pb-1">
+              <CardHeader className="relative z-10 flex-1 pb-1">
                 <div className="mb-3 flex items-start justify-between gap-3">
                   <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl ${tool.iconClass} text-white shadow-md shadow-black/10 transition-transform duration-300 group-hover:scale-105`}>
                     {tool.icon}
@@ -283,34 +271,6 @@ export const HomeView: React.FC<HomeViewProps> = ({ onSelectTool }) => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="relative z-10 pt-2">
-                <div className="mb-3 grid grid-cols-3 gap-2">
-                  <Button
-                    variant={usage.favorite ? 'default' : 'outline'}
-                    className="h-11 px-2 text-xs"
-                    onClick={() => toggleFavorite(tool.id)}
-                  >
-                    <Star className="mr-1 h-3.5 w-3.5" />
-                    Favorite
-                  </Button>
-                  <Button
-                    variant={usage.pinned ? 'default' : 'outline'}
-                    className="h-11 px-2 text-xs"
-                    onClick={() => togglePin(tool.id)}
-                  >
-                    <Pin className="mr-1 h-3.5 w-3.5" />
-                    Pin
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="h-11 px-2 text-xs"
-                    disabled={!hasRecent || !isOpenable}
-                    onClick={() => openTool(tool)}
-                  >
-                    <Clock3 className="mr-1 h-3.5 w-3.5" />
-                    Recent
-                  </Button>
-                </div>
-
                 {isOpenable ? (
                   <Button
                     onClick={() => openTool(tool)}

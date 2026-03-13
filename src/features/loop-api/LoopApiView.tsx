@@ -126,67 +126,71 @@ export const LoopApiView: React.FC = () => {
 
           <main>
             <TabsContent value="tester" className="mt-0 border-none p-0 outline-none focus:outline-none focus-visible:outline-none">
-              <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-12">
-                <div className="space-y-8 lg:col-span-12 xl:col-span-7">
-                  <div className="flex items-center gap-3 px-1">
-                    <div className="h-6 w-1.5 rounded-full bg-primary" />
-                    <h2 className="flex items-center gap-2 text-xl font-black tracking-tight text-foreground">
-                      <Settings2 className="h-5 w-5 text-muted-foreground/40" />
-                      Configuration
-                    </h2>
-                  </div>
-
-                  <TesterPanel
-                    curlInput={curlInput}
-                    setCurlInput={setCurlInput}
-                    onParse={handleParse}
-                    error={error}
-                    isRunning={isRunning}
-                    parsedData={parsedData}
-                    editableHeaders={editableHeaders}
-                    setEditableHeaders={setEditableHeaders}
-                    fieldConfigs={fieldConfigs}
-                    updateFieldConfig={updateFieldConfig}
-                    removeFieldConfig={removeFieldConfig}
-                    useProxy={useProxy}
-                    setUseProxy={setUseProxy}
-                  />
-                </div>
-
-                <div className="space-y-8 lg:col-span-12 xl:col-span-5">
-                  <div className="xl:sticky xl:top-24 space-y-8">
-                    <div className="flex items-center gap-3 px-1">
+              <div className="px-1">
+                <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-12">
+                  <div className="space-y-8 lg:col-span-12 xl:col-span-7">
+                    <div className="flex items-center gap-3">
                       <div className="h-6 w-1.5 rounded-full bg-primary" />
                       <h2 className="flex items-center gap-2 text-xl font-black tracking-tight text-foreground">
-                        <Activity className="h-5 w-5 text-muted-foreground/40" />
-                        Execution
+                        <Settings2 className="h-5 w-5 text-muted-foreground/40" />
+                        Configuration
                       </h2>
                     </div>
 
-                    <ExecutionControls
-                      loopCount={loopCount}
-                      setLoopCount={setLoopCount}
-                      onExecute={executeLoop}
-                      onClear={clearResults}
+                    <TesterPanel
+                      curlInput={curlInput}
+                      setCurlInput={setCurlInput}
+                      onParse={handleParse}
+                      error={error}
                       isRunning={isRunning}
-                      progress={progress}
-                      canExecute={!!parsedData}
+                      parsedData={parsedData}
+                      editableHeaders={editableHeaders}
+                      setEditableHeaders={setEditableHeaders}
+                      fieldConfigs={fieldConfigs}
+                      updateFieldConfig={updateFieldConfig}
+                      removeFieldConfig={removeFieldConfig}
+                      useProxy={useProxy}
+                      setUseProxy={setUseProxy}
                     />
+                  </div>
 
-                    <ResultsPanel results={results} />
+                  <div className="space-y-8 lg:col-span-12 xl:col-span-5">
+                    <div className="xl:sticky xl:top-24 space-y-8">
+                      <div className="flex items-center gap-3">
+                        <div className="h-6 w-1.5 rounded-full bg-primary" />
+                        <h2 className="flex items-center gap-2 text-xl font-black tracking-tight text-foreground">
+                          <Activity className="h-5 w-5 text-muted-foreground/40" />
+                          Execution
+                        </h2>
+                      </div>
+
+                      <ExecutionControls
+                        loopCount={loopCount}
+                        setLoopCount={setLoopCount}
+                        onExecute={executeLoop}
+                        onClear={clearResults}
+                        isRunning={isRunning}
+                        progress={progress}
+                        canExecute={!!parsedData}
+                      />
+
+                      <ResultsPanel results={results} />
+                    </div>
                   </div>
                 </div>
               </div>
             </TabsContent>
 
             <TabsContent value="history" className="mt-0 border-none p-0 focus:outline-none focus-visible:outline-none">
-              <HistoryPanel
-                historyItems={historyItems}
-                isLoading={isLoadingHistory}
-                onLoad={loadHistoryItem}
-                onDelete={deleteHistoryItem}
-                onDeleteAll={deleteAllHistory}
-              />
+              <div className="px-1">
+                <HistoryPanel
+                  historyItems={historyItems}
+                  isLoading={isLoadingHistory}
+                  onLoad={loadHistoryItem}
+                  onDelete={deleteHistoryItem}
+                  onDeleteAll={deleteAllHistory}
+                />
+              </div>
             </TabsContent>
           </main>
         </div>

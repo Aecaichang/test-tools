@@ -25,44 +25,43 @@ export const HistoryPanel: React.FC<HistoryPanelProps> = ({
   const [isConfirmDeleteAllOpen, setIsConfirmDeleteAllOpen] = React.useState(false);
 
   return (
-    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-5 duration-700">
-      <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6 px-2">
-        <div className="space-y-1.5 text-center md:text-left w-full md:w-auto">
-           <h2 className="text-3xl font-black tracking-tight text-foreground flex items-center justify-center md:justify-start gap-4">
-              Archives <span className="text-primary italic">& Logs</span>
-           </h2>
-           <p className="text-muted-foreground font-medium text-lg">
-              ประวัติการเรียกใช้งาน 20 รายการล่าสุด
-           </p>
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-5 duration-500">
+      <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-4">
+        <div className="space-y-1">
+          <h2 className="flex items-center gap-2 text-xl font-black tracking-tight text-foreground">
+            <History className="h-5 w-5 text-primary" />
+            Archives & Logs
+          </h2>
+          <p className="text-sm text-muted-foreground">ประวัติการเรียกใช้งาน 20 รายการล่าสุด</p>
         </div>
-        
+
         {historyItems.length > 0 && !isLoading && (
           <Button 
-            variant="ghost" 
-            size="sm" 
+            variant="outline"
+            size="sm"
             onClick={() => setIsConfirmDeleteAllOpen(true)}
-            className="h-10 gap-2 px-5 rounded-xl text-destructive hover:bg-destructive/10 font-bold self-center md:self-end"
+            className="h-11 min-w-44 gap-2 rounded-xl border-destructive/20 text-destructive hover:bg-destructive/10"
           >
             <Trash2 className="w-4 h-4" />
-            WIPE ARCHIVES
+            Clear History
           </Button>
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {isLoading ? (
           Array.from({ length: 6 }).map((_, i) => (
-            <Card key={i} className="h-48 rounded-3xl border-dashed animate-pulse bg-secondary/10" />
+            <Card key={i} className="h-44 rounded-2xl border-dashed animate-pulse bg-secondary/10" />
           ))
         ) : (
           historyItems.map((item) => (
-            <Card key={item.id} className="group p-6 rounded-[2rem] border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 bg-background relative overflow-hidden">
+            <Card key={item.id} className="group relative overflow-hidden rounded-2xl border-border/60 bg-background p-4 transition-all duration-300 hover:border-primary/30 hover:shadow-lg">
                <div className={cn(
                   "absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 rounded-full blur-2xl opacity-10",
                   item.success ? "bg-green-500" : "bg-destructive"
                )} />
                
-               <div className="space-y-6 relative z-10">
+               <div className="relative z-10 space-y-4">
                   <div className="flex items-start justify-between">
                      <div className="flex items-center gap-3">
                         <div className={cn(
@@ -73,12 +72,12 @@ export const HistoryPanel: React.FC<HistoryPanelProps> = ({
                         </div>
                         <div className="min-w-0">
                            <div className="flex items-center gap-2">
-                              <Badge variant={item.success ? 'success' : 'destructive'} className="text-[9px] px-1.5 h-4 font-black uppercase tracking-tighter">
+                              <Badge variant={item.success ? 'success' : 'destructive'} className="h-5 px-2 text-[10px] font-bold uppercase tracking-wide">
                                 {item.method}
                               </Badge>
-                              <span className="text-[10px] font-bold text-muted-foreground/30">{item.response_status}</span>
+                              <span className="text-[11px] font-semibold text-muted-foreground">{item.response_status}</span>
                            </div>
-                           <p className="text-[11px] font-mono text-muted-foreground/60 truncate max-w-[150px] mt-1">
+                           <p className="mt-1 max-w-[180px] truncate font-mono text-[11px] text-muted-foreground">
                              {item.url}
                            </p>
                         </div>
@@ -89,7 +88,7 @@ export const HistoryPanel: React.FC<HistoryPanelProps> = ({
                           variant="ghost" 
                           size="icon" 
                           onClick={() => onLoad(item)}
-                          className="h-9 w-9 rounded-lg hover:bg-primary/10 hover:text-primary"
+                          className="h-9 w-9 rounded-lg border border-transparent hover:border-primary/20 hover:bg-primary/10 hover:text-primary"
                         >
                           <RotateCw className="w-4 h-4" />
                         </Button>
@@ -97,20 +96,20 @@ export const HistoryPanel: React.FC<HistoryPanelProps> = ({
                           variant="ghost" 
                           size="icon" 
                           onClick={() => onDelete(item.id)}
-                          className="h-9 w-9 rounded-lg hover:bg-destructive/10 hover:text-destructive text-muted-foreground/20"
+                          className="h-9 w-9 rounded-lg border border-transparent text-muted-foreground/40 hover:border-destructive/20 hover:bg-destructive/10 hover:text-destructive"
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
                      </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-2">
                      <div className="space-y-1.5">
                         <div className="flex items-center gap-1.5 px-1">
                            <Database className="w-3 h-3 text-primary/30" />
                            <span className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-widest">Payload</span>
                         </div>
-                        <div className="p-3 bg-secondary/20 rounded-xl border border-border/30 text-[10px] font-mono max-h-20 overflow-hidden text-muted-foreground italic">
+                        <div className="max-h-20 overflow-hidden rounded-xl border border-border/40 bg-secondary/20 p-3 font-mono text-[10px] text-muted-foreground italic">
                            {JSON.stringify(item.payload)}
                         </div>
                      </div>
@@ -119,13 +118,13 @@ export const HistoryPanel: React.FC<HistoryPanelProps> = ({
                            <Search className="w-3 h-3 text-primary/30" />
                            <span className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-widest">Response</span>
                         </div>
-                        <div className="p-3 bg-secondary/20 rounded-xl border border-border/30 text-[10px] font-mono max-h-20 overflow-hidden text-muted-foreground">
+                        <div className="max-h-20 overflow-hidden rounded-xl border border-border/40 bg-secondary/20 p-3 font-mono text-[10px] text-muted-foreground">
                            {JSON.stringify(item.response_data)}
                         </div>
                      </div>
                   </div>
 
-                  <div className="flex items-center gap-2 pt-2 border-t border-border/20 text-[9px] font-bold text-muted-foreground/30 uppercase tracking-widest">
+                  <div className="flex items-center gap-2 border-t border-border/30 pt-2 text-[10px] font-semibold text-muted-foreground">
                      <Clock className="w-3 h-3" />
                      {new Date(item.created_at).toLocaleString()}
                   </div>
@@ -135,13 +134,13 @@ export const HistoryPanel: React.FC<HistoryPanelProps> = ({
         )}
         
         {historyItems.length === 0 && !isLoading && (
-          <div className="md:col-span-2 xl:col-span-3 py-40 flex flex-col items-center justify-center text-center space-y-6 bg-secondary/5 rounded-[4rem] border-2 border-dashed border-border/50">
-             <div className="p-6 rounded-3xl bg-background shadow-sm border border-border/50 text-muted-foreground/10">
+          <div className="md:col-span-2 xl:col-span-3 flex flex-col items-center justify-center space-y-4 rounded-2xl border-2 border-dashed border-border/50 bg-secondary/5 py-24 text-center">
+             <div className="rounded-2xl border border-border/50 bg-background p-5 text-muted-foreground/20">
                 <History className="w-16 h-16" />
              </div>
-             <div className="space-y-1">
-                <p className="text-xl font-black text-muted-foreground/40 uppercase tracking-widest italic">Temporal Void</p>
-                <p className="text-sm text-muted-foreground/30 font-medium">No records found in the current time-stream</p>
+             <div className="space-y-1.5">
+                <p className="text-lg font-bold text-foreground">ยังไม่มีประวัติการยิง API</p>
+                <p className="text-sm text-muted-foreground">ลองรัน Workbench สัก 1 รอบ แล้วรายการจะขึ้นที่แท็บนี้อัตโนมัติ</p>
              </div>
           </div>
         )}
@@ -151,10 +150,10 @@ export const HistoryPanel: React.FC<HistoryPanelProps> = ({
         isOpen={isConfirmDeleteAllOpen}
         onClose={() => setIsConfirmDeleteAllOpen(false)}
         onConfirm={onDeleteAll}
-        title="Wipe Entire Archive?"
+        title="Clear all history?"
         description="คุณแน่ใจหรือไม่ว่าต้องการลบประวัติการยิง API ทั้งหมด? ข้อมูลนี้จะถูกลบออกจากระบบถาวร"
-        confirmText="Confirm Wipeout"
-        cancelText="Keep Records"
+        confirmText="Clear history"
+        cancelText="Cancel"
       />
     </div>
   );
