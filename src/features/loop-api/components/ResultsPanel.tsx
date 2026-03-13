@@ -63,7 +63,7 @@ export const ResultsPanel: React.FC<ResultsPanelProps> = ({
   };
 
   return (
-    <div className="space-y-6 flex flex-col h-full h-min-[700px]">
+    <div className="space-y-6 flex flex-col h-full min-h-[700px]">
       <Card className="h-full flex flex-col shadow-xl border-border/50 overflow-hidden rounded-[2rem] bg-gradient-to-b from-background to-secondary/10">
         <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between shrink-0 bg-background/50 backdrop-blur-md border-b border-border/30 p-8 gap-4">
           <div className="space-y-1.5">

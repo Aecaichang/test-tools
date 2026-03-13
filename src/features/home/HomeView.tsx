@@ -77,7 +77,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onSelectTool }) => {
   ];
 
   return (
-    <div className="container mx-auto p-4 md:p-8 space-y-12 max-w-6xl animate-in fade-in duration-700">
+    <div className="container mx-auto p-4 md:p-8 space-y-12 max-w-6xl">
       <div className="text-center space-y-4 max-w-3xl mx-auto">
         <h1 className="text-5xl font-extrabold tracking-tight text-foreground">
           Welcome to <span className="text-primary">Test Tools Hub</span>

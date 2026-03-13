@@ -1,12 +1,21 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/common/Card';
+import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
 import { Textarea } from '@/components/common/Textarea';
 import { Checkbox } from '@/components/common/Checkbox';
 import { Badge } from '@/components/common/Badge';
 import { Select, type SelectOption } from '@/components/common/Select';
-import { Terminal, RotateCcw, Settings2, AlertCircle, Database, Search, Zap, Trash2, Globe, Sparkles } from 'lucide-react';
+import { 
+  Terminal, 
+  Settings2, 
+  AlertCircle, 
+  Database, 
+  Search, 
+  Trash2, 
+  Globe, 
+  Sparkles
+} from 'lucide-react';
 import { ParsedCurl } from '../utils/curl-parser';
 import { FieldConfig } from '../types';
 import { cn } from '@/lib/utils';
@@ -44,7 +53,6 @@ export const TesterPanel: React.FC<TesterPanelProps> = ({
   onParse,
   error,
   isRunning,
-  progress,
   parsedData,
   editableHeaders,
   setEditableHeaders,
@@ -55,266 +63,188 @@ export const TesterPanel: React.FC<TesterPanelProps> = ({
   setUseProxy,
 }) => {
   return (
-    <div className="space-y-6 flex flex-col h-full">
+    <div className="space-y-8">
       {/* CURL Input Section */}
-      <Card className="glow-card overflow-hidden transition-all duration-300 flex-1 flex flex-col group border-primary/20 shadow-md">
-        <div className="h-1.5 bg-secondary w-full relative shrink-0 overflow-hidden">
-          {isRunning && (
-            <div 
-              className="progress-bar-fill shadow-[0_0_15px_rgba(59,130,246,0.6)]" 
-              style={{ "--progress-width": `${progress}%` } as React.CSSProperties}
-            />
-          )}
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-primary/5 text-primary border border-primary/10">
+              <Terminal className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold tracking-tight">CURL Input</h3>
+              <p className="text-sm text-muted-foreground">Import your request from a CURL command</p>
+            </div>
+          </div>
+
+          <div className="flex items-center bg-secondary/30 p-1 rounded-xl border border-border/50">
+            <button
+              onClick={() => setUseProxy(true)}
+              className={cn(
+                "px-4 py-1.5 text-[11px] font-bold transition-all rounded-lg flex items-center gap-2",
+                useProxy ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Globe className="w-3.5 h-3.5" />
+              PROXY ON
+            </button>
+            <button
+              onClick={() => setUseProxy(false)}
+              className={cn(
+                "px-4 py-1.5 text-[11px] font-bold transition-all rounded-lg",
+                !useProxy ? "bg-background text-muted-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              OFF
+            </button>
+          </div>
         </div>
-        <CardHeader className="shrink-0 pb-6 pt-6 px-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="space-y-1.5">
-              <CardTitle className="flex items-center gap-2.5 text-xl font-black group-hover:text-primary transition-colors">
-                <div className="p-2 rounded-xl bg-primary/10 text-primary">
-                  <Terminal className="w-5 h-5" />
-                </div>
-                Input CURL command
-              </CardTitle>
-              <CardDescription className="font-medium">วาง CURL ที่คุณต้องการยิงซ้ำที่นี่</CardDescription>
-            </div>
-            
-            <div className="flex items-center gap-2 bg-secondary/20 p-1 rounded-2xl border border-border/50 shadow-sm self-start sm:self-center">
-              <div className="flex items-center gap-2 px-3">
-                <div className={cn(
-                  "w-2 h-2 rounded-full",
-                  useProxy ? "bg-green-500 animate-pulse" : "bg-muted-foreground/30"
-                )} />
-                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70">Proxy</span>
-              </div>
-              <div className="flex items-center bg-background rounded-xl border border-border/20 shadow-sm overflow-hidden p-0.5">
-                <button
-                  onClick={() => setUseProxy(true)}
-                  className={cn(
-                    "px-4 py-1.5 text-[10px] font-black transition-all flex items-center gap-2 rounded-lg",
-                    useProxy ? "bg-primary text-primary-foreground shadow-lg" : "text-muted-foreground hover:bg-secondary"
-                  )}
-                >
-                  <Globe className="w-3 h-3" />
-                  ON
-                </button>
-                <button
-                  onClick={() => setUseProxy(false)}
-                  className={cn(
-                    "px-4 py-1.5 text-[10px] font-black transition-all rounded-lg",
-                    !useProxy ? "bg-destructive/10 text-destructive" : "text-muted-foreground hover:bg-secondary"
-                  )}
-                >
-                  OFF
-                </button>
-              </div>
-            </div>
-          </div>
-        </CardHeader>
-        
-        <CardContent className="space-y-5 px-6 pb-8">
-          <div className="relative group/textarea">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-2xl blur opacity-0 group-hover/textarea:opacity-100 transition duration-500" />
-            <div className="relative">
-              <Textarea
-                value={curlInput}
-                onChange={(e) => setCurlInput(e.target.value)}
-                placeholder="curl --location 'https://api.example.com/...' \"
-                className="h-52 font-mono text-[11px] bg-background border-border/40 focus:border-primary/50 resize-none transition-all duration-300 rounded-2xl p-5 leading-relaxed shadow-inner"
+
+        <div className="relative group">
+          <div className="absolute -inset-0.5 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition duration-500" />
+          <Card className="relative p-0 overflow-hidden border-border/50 bg-background/50 backdrop-blur-sm">
+            <Textarea
+              value={curlInput}
+              onChange={(e) => setCurlInput(e.target.value)}
+              placeholder="Paste your CURL command here..."
+              className="min-h-[220px] font-mono text-[12px] bg-transparent border-none focus-visible:ring-0 resize-none p-6 leading-relaxed"
+              disabled={isRunning}
+            />
+            <div className="absolute bottom-4 right-4 flex gap-2">
+               <Button 
+                onClick={onParse}
+                variant="outline"
+                size="sm"
+                className="h-9 px-4 rounded-lg font-bold text-xs gap-2 border-primary/20 hover:bg-primary/5 bg-background shadow-sm"
                 disabled={isRunning}
-              />
-              {!curlInput && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none opacity-[0.03] select-none">
-                  <Terminal className="w-24 h-24 mb-4" />
-                  <p className="text-sm font-black tracking-widest uppercase">Waiting for Input</p>
-                </div>
-              )}
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                PARSE COMMAND
+              </Button>
             </div>
+          </Card>
+        </div>
+
+        {error && (
+          <div className="p-4 bg-destructive/5 border border-destructive/10 text-destructive rounded-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <p className="text-xs font-medium">{error}</p>
           </div>
-          
-          <Button 
-            onClick={onParse} 
-            className="w-full h-12 shadow-md transition-all active:scale-[0.98] font-bold text-sm rounded-xl overflow-hidden relative group" 
-            variant="default" 
-            disabled={isRunning}
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-primary to-primary-foreground/10 opacity-0 group-hover:opacity-10 transition-opacity" />
-            <RotateCcw className={cn("w-4 h-4 mr-2", isRunning && "animate-spin")} />
-            Parse & Extract Parameters
-          </Button>
+        )}
+      </section>
 
-          {error && (
-            <div className="p-4 bg-destructive/10 border border-destructive/20 text-destructive text-sm rounded-2xl flex flex-row items-start gap-3 animate-in fade-in slide-in-from-top-2">
-              <div className="p-1 rounded-lg bg-destructive/10 mt-0.5">
-                <AlertCircle className="w-4 h-4" />
-              </div>
-              <div className="space-y-1">
-                <p className="font-black text-xs uppercase tracking-widest">Parse Error</p>
-                <p className="text-xs opacity-90 leading-relaxed font-medium">{error}</p>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Headers Section */}
+      {/* Configuration Hub */}
       {parsedData && (
-        <Card className="animate-in slide-in-from-bottom-5 duration-500 delay-75 border-border shadow-sm rounded-3xl overflow-hidden">
-          <div className="h-1 bg-primary/20 w-full" />
-          <CardHeader className="pb-4 px-6 pt-6">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <CardTitle className="flex items-center gap-2.5 text-base font-black">
-                  <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-600">
-                    <Sparkles className="w-4 h-4" />
-                  </div>
-                  Request Headers
-                </CardTitle>
-                <CardDescription className="text-[11px] font-medium">แก้ไข Header สำหรับการเรียก API ในแต่ละรอบ</CardDescription>
-              </div>
-              <Badge variant="outline" className="font-bold bg-secondary/20">{Object.keys(editableHeaders).length}</Badge>
-            </div>
-          </CardHeader>
-          <CardContent className="px-6 pb-6 pt-0">
-            <div className="grid grid-cols-1 gap-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar p-1">
-              {Object.entries(editableHeaders).map(([key, value]) => (
-                <div key={key} className="flex flex-col gap-1.5 p-3.5 rounded-2xl bg-secondary/10 border border-border/30 hover:border-primary/20 hover:bg-background transition-all group shadow-sm">
-                  <div className="flex items-center justify-between">
-                    <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest group-hover:text-primary transition-colors leading-none truncate pr-4">{key}</p>
-                  </div>
-                  <Input
-                    value={value}
-                    onChange={(e) => setEditableHeaders(prev => ({ ...prev, [key]: e.target.value }))}
-                    className="h-7 text-[11px] bg-transparent border-none p-0 focus-visible:ring-0 focus-visible:ring-offset-0 font-bold text-foreground/80"
-                    disabled={isRunning}
-                    placeholder="Enter header value..."
-                  />
-                </div>
-              ))}
-              {Object.keys(editableHeaders).length === 0 && (
-                <div className="flex flex-col items-center justify-center py-10 text-muted-foreground/40 gap-2">
-                   <Terminal className="w-8 h-8 opacity-10" />
-                   <p className="text-xs font-medium italic">No headers detected</p>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Parameters Config Section */}
-      {fieldConfigs.length > 0 && (
-        <Card className="animate-in slide-in-from-bottom-5 duration-500 border-primary/10 relative z-20 shadow-xl rounded-[2rem] overflow-hidden">
-          <CardHeader className="pb-5 px-8 pt-8 bg-gradient-to-b from-primary/[0.03] to-transparent border-b border-border/30">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1.5">
-                <CardTitle className="flex items-center gap-3 text-xl font-black">
-                  <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-600 shadow-sm">
-                    <Settings2 className="w-5 h-5" />
-                  </div>
-                  Dynamic Parameters
-                </CardTitle>
-                <CardDescription className="font-medium">กำหนดค่าสุ่มหรือระบุค่าคงที่สำหรับแต่ละชุดการทดสอบ</CardDescription>
-              </div>
-              <Badge className="bg-primary text-primary-foreground font-black px-3 py-1 rounded-full shadow-lg shadow-primary/20">{fieldConfigs.length}</Badge>
-            </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="divide-y divide-border/20">
-              {fieldConfigs.map((field, index) => (
-                <div 
-                  key={`${field.location}-${field.key}`} 
-                  className={cn(
-                    "flex flex-col gap-4 p-6 transition-all duration-300",
-                    field.enabled ? "bg-primary/[0.02] border-l-4 border-l-primary" : "hover:bg-secondary/10 border-l-4 border-l-transparent"
-                  )}
-                  style={{ zIndex: fieldConfigs.length - index, position: 'relative' }}
-                >
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 group/row">
-                    <div className="flex items-start gap-5 flex-1 min-w-0">
-                      <div className="pt-2">
-                        <Checkbox
-                          checked={field.enabled}
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFieldConfig(field.key, { enabled: e.target.checked })}
-                          disabled={isRunning}
-                          className="w-6 h-6 rounded-lg border-2"
-                        />
-                      </div>
-                      
-                      <div className="flex-1 flex flex-col gap-2 min-w-0">
-                        <div className="flex items-center gap-2.5 flex-wrap">
-                          <span className="text-[13px] font-black text-foreground truncate max-w-[200px]">
-                            {field.key}
-                          </span>
-                          <Badge 
-                            variant="secondary" 
-                            className={cn(
-                              "text-[9px] py-0.5 px-2.5 font-black uppercase h-5 tracking-widest border-0 rounded-full",
-                              field.location === 'query' ? "bg-amber-500/10 text-amber-600" : "bg-blue-500/10 text-blue-600"
-                            )}
-                          >
-                            {field.location === 'query' ? <Search className="w-3 h-3 mr-1.5" /> : <Database className="w-3 h-3 mr-1.5" />}
-                            {field.location}
-                          </Badge>
-                        </div>
-                        <Input
-                          value={field.value?.toString() || ''}
-                          onChange={(e) => updateFieldConfig(field.key, { value: e.target.value })}
-                          className={cn(
-                            "h-7 text-xs bg-secondary/20 border-border/20 px-3 rounded-lg focus:bg-background transition-all font-mono",
-                            field.enabled ? "opacity-30 cursor-not-allowed select-none" : "opacity-100"
-                          )}
-                          placeholder="Default value if not enabled..."
-                          disabled={isRunning || field.enabled}
-                        />
-                      </div>
+        <div className="grid grid-cols-1 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          {/* Headers */}
+          <section className="space-y-4">
+             <div className="flex items-center gap-2 px-1">
+                <Badge variant="outline" className="rounded-md font-bold text-[10px] px-1.5 h-5 border-blue-500/20 text-blue-600 bg-blue-50/50">HEADERS</Badge>
+                <span className="text-[11px] font-bold text-muted-foreground/60 uppercase tracking-wider">Dynamic Headers</span>
+             </div>
+             
+             <Card className="p-4 border-border/40 bg-secondary/5 space-y-3 rounded-2xl">
+                <div className="grid grid-cols-1 gap-2 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
+                   {Object.entries(editableHeaders).map(([key, value]) => (
+                    <div key={key} className="flex flex-col gap-1 p-3 rounded-xl bg-background border border-border/50 shadow-sm">
+                      <span className="text-[9px] font-black text-muted-foreground/50 uppercase truncate">{key}</span>
+                      <Input
+                        value={value}
+                        onChange={(e) => setEditableHeaders(prev => ({ ...prev, [key]: e.target.value }))}
+                        className="h-6 text-[12px] bg-transparent border-none p-0 focus-visible:ring-0 font-medium"
+                        disabled={isRunning}
+                      />
                     </div>
+                  ))}
+                  {Object.keys(editableHeaders).length === 0 && (
+                    <p className="text-center py-4 text-xs text-muted-foreground italic">No headers found</p>
+                  )}
+                </div>
+             </Card>
+          </section>
+
+          {/* Parameters */}
+          <section className="space-y-4">
+            <div className="flex items-center justify-between px-1">
+               <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="rounded-md font-bold text-[10px] px-1.5 h-5 border-amber-500/20 text-amber-600 bg-amber-50/50">PARAMS</Badge>
+                  <span className="text-[11px] font-bold text-muted-foreground/60 uppercase tracking-wider">Smart Injectors</span>
+               </div>
+               <span className="text-[10px] font-bold text-muted-foreground/40">{fieldConfigs.length} detected</span>
+            </div>
+
+            <div className="space-y-3">
+              {fieldConfigs.map((field) => (
+                <Card 
+                  key={`${field.location}-${field.key}`}
+                  className={cn(
+                    "relative p-4 border-border/40 transition-all duration-300 rounded-2xl",
+                    field.enabled ? "ring-1 ring-primary/20 bg-primary/[0.01]" : "bg-background shadow-sm"
+                  )}
+                >
+                  <div className="flex items-start gap-4">
+                    <Checkbox
+                      checked={field.enabled}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFieldConfig(field.key, { enabled: e.target.checked })}
+                      disabled={isRunning}
+                      className="mt-1"
+                    />
                     
-                    <div className="flex items-center gap-4 shrink-0 justify-end">
-                      <div className="w-[180px]">
-                        {field.enabled ? (
-                          <div className="animate-in slide-in-from-right-4 duration-300">
+                    <div className="flex-1 space-y-3 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold truncate max-w-[150px]">{field.key}</span>
+                        {field.location === 'query' ? (
+                          <Search className="w-3 h-3 text-amber-500/50" />
+                        ) : (
+                          <Database className="w-3 h-3 text-blue-500/50" />
+                        )}
+                      </div>
+
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <div className="flex-1">
+                          {field.enabled ? (
                             <Select
                               value={field.generator}
                               onChange={(val) => updateFieldConfig(field.key, { generator: val as FieldConfig['generator'] })}
                               options={GENERATOR_OPTIONS}
+                              className="h-9 text-xs"
                               disabled={isRunning}
                             />
-                          </div>
-                        ) : (
-                          <div className="h-10 flex items-center justify-end px-4 text-[11px] text-muted-foreground font-bold italic opacity-30">
-                            Manual Entry
-                          </div>
-                        )}
+                          ) : (
+                            <Input
+                              value={field.value?.toString() || ''}
+                              onChange={(e) => updateFieldConfig(field.key, { value: e.target.value })}
+                              className="h-9 text-xs font-mono bg-secondary/10"
+                              placeholder="Fixed value..."
+                              disabled={isRunning}
+                            />
+                          )}
+                        </div>
+                        
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-9 w-9 rounded-xl text-muted-foreground/30 hover:text-destructive hover:bg-destructive/5 shrink-0"
+                          onClick={() => removeFieldConfig(field.key, field.location)}
+                          disabled={isRunning}
+                        >
+                          <Trash2 className="w-4 h-4" /> 
+                        </Button>
                       </div>
-                      
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="w-10 h-10 rounded-xl text-muted-foreground/30 hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover/row:opacity-100 transition-all active:scale-90"
-                        onClick={() => removeFieldConfig(field.key, field.location)}
-                        disabled={isRunning}
-                      >
-                        <Trash2 className="w-4 h-4" /> 
-                      </Button>
                     </div>
                   </div>
-                </div>
+                </Card>
               ))}
+              
+              {fieldConfigs.length === 0 && (
+                <div className="py-12 text-center bg-secondary/5 rounded-3xl border border-dashed border-border/50">
+                   <Settings2 className="w-8 h-8 mx-auto text-muted-foreground/20 mb-3" />
+                   <p className="text-xs font-medium text-muted-foreground/40">No dynamic parameters found</p>
+                </div>
+              )}
             </div>
-            {fieldConfigs.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-20 text-muted-foreground/30 gap-4">
-                <div className="p-5 rounded-full bg-secondary/30 relative overflow-hidden">
-                   <Settings2 className="w-12 h-12 opacity-20 relative z-10" />
-                   <div className="absolute inset-0 bg-primary/5 animate-pulse" />
-                </div>
-                <div className="text-center space-y-1">
-                   <p className="text-sm font-black tracking-widest uppercase">No parameters detected</p>
-                   <p className="text-xs font-medium">Try parsing a CURL with query params or JSON body</p>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+          </section>
+        </div>
       )}
     </div>
   );
