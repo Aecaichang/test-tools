@@ -244,8 +244,8 @@ export const HomeView: React.FC<HomeViewProps> = ({ onSelectTool }) => {
   }, [tools, withUsageMeta]);
 
   return (
-    <section className="container mx-auto max-w-6xl px-4 py-6 sm:py-8 md:py-10 pb-24 md:pb-10">
-      <div className="grid grid-cols-1 gap-4 sm:gap-5 lg:grid-cols-3">
+    <section className="container mx-auto max-w-7xl px-4 py-6 sm:py-8 md:py-10 pb-24 md:pb-10">
+      <div className="grid grid-cols-1 gap-4 sm:gap-5 lg:grid-cols-4">
         {filteredTools.map((tool) => {
           const usage = withUsageMeta(tool.id);
           const isOpenable = canOpenTool(tool.status);

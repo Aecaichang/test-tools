@@ -1,50 +1,73 @@
-# React + TypeScript + Vite
+# 🛠️ Aecaichang Testing Tools
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+ชุดเครื่องมือสำหรับการทดสอบและพัฒนาซอฟต์แวร์ที่ออกแบบมาเพื่อความรวดเร็ว ประสิทธิภาพ และความสวยงาม (Premium UI/UX) พัฒนาด้วยเทคโนโลยีสมัยใหม่เพื่อให้ทีม QA และ Developer ทำงานได้ง่ายขึ้น
 
-Currently, two official plugins are available:
+![Aecaichang Testing Tools Preview](public/favicon.png)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## Expanding the ESLint configuration
+## 🌟 Key Features
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+ระบบประกอบด้วยเครื่องมือหลักดังนี้:
 
-- Configure the top-level `parserOptions` property like this:
+- **🔄 CSV to Excel Converter**: แปลงไฟล์ CSV หรือข้อมูลดิบให้เป็นไฟล์ Excel (.xlsx) ที่สวยงามพร้อมใช้งาน
+- **🔁 Loop API Tester**: เครื่องมือสำหรับการทดสอบ API ในรูปแบบวนลูป (Looping) พร้อมระบบ History และ Parser
+- **📦 Mock Data Generator**: สร้างข้อมูลจำลองสำหรับการทำเทสได้ในคลิกเดียว
+- **🔣 Encoding Tools (Base64, JSON)**: ตัวแปลงและจัดระเบียบข้อมูล Base64 และ JSON ให้เป็นระเบียบ
+- **📊 Product Query Tools**: ระบบค้นหาและจัดการข้อมูลผลิตภัณฑ์สำหรับการทดสอบเฉพาะทาง
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+---
+
+## 🚀 Tech Stack
+
+โปรเจกต์นี้สร้างขึ้นด้วยมาตรฐานการพัฒนาขั้นสูง:
+
+- **Core**: [React 18](https://reactjs.org/) + [TypeScript](https://www.typescriptlang.org/) (Strict Typing)
+- **Build Tool**: [Vite](https://vitejs.dev/) (เพื่อความเร็วในการ Build และ Hot Reload)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/) (Modern & Responsive Utility-First CSS)
+- **UI Components**: [Shadcn/UI](https://ui.shadcn.com/) (Custom Wrapper Components @/components/common/)
+
+---
+
+## 🛠️ Getting Started
+
+### Prerequisites
+
+- Node.js (version 18 or higher)
+- npm or yarn
+
+### Installation
+
+1. Clone โปรเจกต์ไปยังเครื่องของคุณ
+```bash
+git clone https://testingtools.aecaichang.com/
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
-
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
-
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
+2. ติดตั้ง Dependencies
+```bash
+npm install
 ```
+
+3. เริ่มใช้งานโหมด Development
+```bash
+npm run dev
+```
+
+---
+
+## 📁 Project Structure
+
+```text
+src/
+├── components/       # Common UI Wrapper Components
+├── features/         # ฟีเจอร์แยกตามโมดูล (CSV, Loop API, Mock, etc.)
+├── assets/           # รูปภาพและสไตล์
+└── lib/              # Shared utilities และ hooks
+```
+
+---
+
+## ⚖️ License
+
+Copyright © 2026 **Aecaichang**. All rights reserved.
+Developed with ❤️ by **Antigravity AI Assistant** & **ChanChai Tasujai**.
