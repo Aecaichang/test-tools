@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { Badge } from '@/components/common/Badge';
@@ -10,6 +10,7 @@ import {
   Database,
   Link,
   FileSpreadsheet,
+  ArrowRightLeft,
   Sparkles
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -105,7 +106,7 @@ const statusLabelMap: Record<ToolStatus, string> = {
 export const HomeView: React.FC<HomeViewProps> = ({ onSelectTool }) => {
   const [usageMap, setUsageMap] = useState<Record<string, ToolUsageMeta>>(readUsageStorage);
 
-  const tools: Tool[] = [
+  const tools: Tool[] = useMemo(() => [
     {
       id: 'loop-api',
       name: 'Loop API Tester',
@@ -167,6 +168,16 @@ export const HomeView: React.FC<HomeViewProps> = ({ onSelectTool }) => {
       status: 'ready'
     },
     {
+      id: 'csv-converter',
+      name: 'CSV to Excel Converter',
+      description: 'แปลงไฟล์ CSV เป็นไฟล์เครื่องหมาย Excel (.xlsx) อย่างรวดเร็ว พร้อมรองรับภาษาไทยและ UTF-8',
+      icon: <ArrowRightLeft className="w-8 h-8" />,
+      accentClass: 'from-emerald-400/20 to-green-500/20',
+      iconClass: 'bg-emerald-500',
+      category: 'Spreadsheet',
+      status: 'ready'
+    },
+    {
       id: 'product-query',
       name: 'Product SQL Generator',
       description: 'เครื่องมือช่วยสร้าง SQL (Select / Update / Rollback) สำหรับจัดการข้อมูลสินค้าจำนวนมากจากรหัส SKU',
@@ -176,13 +187,13 @@ export const HomeView: React.FC<HomeViewProps> = ({ onSelectTool }) => {
       category: 'SQL',
       status: 'ready'
     }
-  ];
+  ], []);
 
   useEffect(() => {
     localStorage.setItem(TOOL_USAGE_STORAGE_KEY, JSON.stringify(usageMap));
   }, [usageMap]);
 
-  const withUsageMeta = (toolId: string): ToolUsageMeta => usageMap[toolId] ?? defaultUsageMeta;
+  const withUsageMeta = useCallback((toolId: string): ToolUsageMeta => usageMap[toolId] ?? defaultUsageMeta, [usageMap]);
 
   const updateUsageMeta = (toolId: string, updater: (prev: ToolUsageMeta) => ToolUsageMeta) => {
     setUsageMap((prev) => ({
@@ -214,7 +225,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onSelectTool }) => {
       if (statusPriority[a.status] !== statusPriority[b.status]) return statusPriority[a.status] - statusPriority[b.status];
       return a.name.localeCompare(b.name);
     });
-  }, [tools, usageMap]);
+  }, [tools, withUsageMeta]);
 
   const filteredTools = sortedTools;
 
@@ -230,7 +241,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onSelectTool }) => {
       .slice(0, 3);
 
     return ranked.map((item) => item.tool);
-  }, [tools, usageMap]);
+  }, [tools, withUsageMeta]);
 
   return (
     <section className="container mx-auto max-w-6xl px-4 py-6 sm:py-8 md:py-10 pb-24 md:pb-10">

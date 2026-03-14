@@ -6,6 +6,7 @@ import { Base64ToolView } from './features/base64-tool/Base64ToolView'
 import { JsonToolView } from './features/json-tool/JsonToolView'
 import { ExcelToolView } from './features/excel-tool/ExcelToolView'
 import { ProductQueryView } from './features/product-query/ProductQueryView'
+import { CsvConverterView } from './features/csv-converter/CsvConverterView'
 import { Button } from '@/components/common/Button'
 import { Toaster } from 'sonner'
 
@@ -51,6 +52,7 @@ function App() {
           <Route path="/base64-tool" element={<Base64ToolView />} />
           <Route path="/json-tool" element={<JsonToolView />} />
           <Route path="/excel-tool" element={<ExcelToolView />} />
+          <Route path="/csv-converter" element={<CsvConverterView />} />
           <Route path="/product-query" element={<ProductQueryView />} />
           <Route path="*" element={
             <div className="container mx-auto flex flex-col items-center justify-center space-y-4 px-4 py-20 text-center">
