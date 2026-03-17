@@ -2,6 +2,7 @@ import React from 'react';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
+import { Textarea } from '@/components/common/Textarea';
 import { Checkbox } from '@/components/common/Checkbox';
 import { Badge } from '@/components/common/Badge';
 import { Select, type SelectOption } from '@/components/common/Select';
@@ -77,7 +78,7 @@ export const TesterPanel: React.FC<TesterPanelProps> = ({
           </div>
 
           <div className="relative">
-            <textarea
+            <Textarea
               value={curlInput}
               onChange={(e) => setCurlInput(e.target.value)}
               placeholder="Paste your cURL command here..."

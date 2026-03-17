@@ -312,13 +312,16 @@ export const HomeView: React.FC<HomeViewProps> = ({ onSelectTool }) => {
 
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border/80 bg-background/95 p-2 backdrop-blur md:hidden">
         <div className="container mx-auto grid max-w-6xl grid-cols-3 gap-2">
-          {quickTools.map((tool) => (
+        {quickTools.map((tool) => (
             <Button
               key={tool.id}
               variant="outline"
-              className="h-11 px-2 text-xs"
+              className="h-11 px-2 text-xs gap-1.5"
               onClick={() => openTool(tool)}
             >
+              <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md ${tool.iconClass} text-white`}>
+                {tool.icon}
+              </span>
               <span className="truncate">{tool.name}</span>
             </Button>
           ))}

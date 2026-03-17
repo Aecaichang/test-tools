@@ -4,6 +4,7 @@ import { JsonFormatter } from './components/JsonFormatter';
 import { JsonDiff } from './components/JsonDiff';
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/common/Card';
+import { QuickStartCard } from '@/components/common/QuickStartCard';
 
 type SubView = 'formatter' | 'diff';
 
@@ -28,6 +29,7 @@ export const JsonToolView: React.FC = () => {
         <div className="flex items-center bg-secondary/30 p-1.5 rounded-2xl border border-border/50 backdrop-blur-sm self-start md:self-auto">
           <button
             onClick={() => setActiveSubView('formatter')}
+            aria-pressed={activeSubView === 'formatter'}
             className={cn(
               "flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300",
               activeSubView === 'formatter' 
@@ -40,6 +42,7 @@ export const JsonToolView: React.FC = () => {
           </button>
           <button
             onClick={() => setActiveSubView('diff')}
+            aria-pressed={activeSubView === 'diff'}
             className={cn(
               "flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300",
               activeSubView === 'diff' 
@@ -53,14 +56,11 @@ export const JsonToolView: React.FC = () => {
         </div>
       </div>
 
-      <Card className="mb-6 border-dashed border-primary/25 bg-primary/[0.02]">
-        <CardContent className="py-4 text-sm text-muted-foreground space-y-1">
-          <p className="font-semibold text-foreground">Quick Start</p>
-          <p>1. เลือกโหมด Formatter หรือ JSON Diff</p>
-          <p>2. วาง JSON ที่ต้องการตรวจสอบ</p>
-          <p>3. คัดลอกผลลัพธ์ที่จัดรูปแบบแล้ว</p>
-        </CardContent>
-      </Card>
+      <QuickStartCard steps={[
+        'เลือกโหมด Formatter หรือ JSON Diff',
+        'วาง JSON ที่ต้องการตรวจสอบ',
+        'คัดลอกผลลัพธ์ที่จัดรูปแบบแล้ว',
+      ]} />
 
       <div className="grid grid-cols-1 gap-8">
         {activeSubView === 'formatter' ? <JsonFormatter /> : <JsonDiff />}

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/common/Card';
+import { QuickStartCard } from '@/components/common/QuickStartCard';
 import { 
   FileSpreadsheet, 
   Upload, 
@@ -75,12 +76,14 @@ export const ExcelToolView: React.FC = () => {
   };
 
   const currentData = (data?.sheets[activeSheet] as Record<string, unknown>[]) || [];
+  const ROW_LIMIT = 1000;
+  const isLargeFile = currentData.length > ROW_LIMIT;
   
   const filteredData = currentData.filter(row => 
     Object.values(row).some(val => 
       String(val).toLowerCase().includes(searchTerm.toLowerCase())
     )
-  );
+  ).slice(0, ROW_LIMIT);
 
   const columns = currentData.length > 0 ? Object.keys(currentData[0]) : [];
 
@@ -112,14 +115,11 @@ export const ExcelToolView: React.FC = () => {
         </div>
       </div>
 
-      <Card className="mb-6 border-dashed border-primary/25 bg-primary/[0.02]">
-        <CardContent className="py-4 text-sm text-muted-foreground space-y-1">
-          <p className="font-semibold text-foreground">Quick Start</p>
-          <p>1. อัปโหลดไฟล์ .xlsx/.xls/.csv</p>
-          <p>2. เลือก Sheet และค้นหาข้อมูล</p>
-          <p>3. กด Download JSON เพื่อนำข้อมูลไปใช้ต่อ</p>
-        </CardContent>
-      </Card>
+      <QuickStartCard steps={[
+        'อัปโหลดไฟล์ .xlsx/.xls/.csv',
+        'เลือก Sheet และค้นหาข้อมูล',
+        'กด Download JSON เพื่อนำข้อมูลไปใช้ต่อ',
+      ]} />
 
       {!data ? (
         <Card className="glow-card border-dashed border-2 border-primary/20 bg-primary/[0.01] hover:bg-primary/[0.03] transition-all duration-500 group">
@@ -193,6 +193,7 @@ export const ExcelToolView: React.FC = () => {
               <button
                 key={name}
                 onClick={() => setActiveSheet(name)}
+                aria-current={activeSheet === name ? 'true' : undefined}
                 className={cn(
                   "px-4 py-2 rounded-xl text-xs font-bold transition-all border",
                   activeSheet === name 
@@ -229,6 +230,11 @@ export const ExcelToolView: React.FC = () => {
                   </Button>
                 </div>
               </div>
+              {isLargeFile && (
+                <p className="text-xs text-amber-600 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-1.5">
+                  Showing first {ROW_LIMIT.toLocaleString()} of {currentData.length.toLocaleString()} rows. Download JSON to access all data.
+                </p>
+              )}
             </CardHeader>
             <CardContent className="p-0 flex-1 overflow-hidden">
               <Table className="h-full">

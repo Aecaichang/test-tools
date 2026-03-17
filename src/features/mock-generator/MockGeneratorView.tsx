@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/common/Card';
+import { QuickStartCard } from '@/components/common/QuickStartCard';
 import { Button } from '@/components/common/Button';
 import { Input } from '@/components/common/Input';
 import { Badge } from '@/components/common/Badge';
@@ -38,6 +39,7 @@ export const MockGeneratorView: React.FC = () => {
     { id: '3', name: 'citizenId', type: 'id_card' }
   ]);
   const [count, setCount] = useState(10);
+  const [countError, setCountError] = useState<string | null>(null);
   const [generatedData, setGeneratedData] = useState<Record<string, string | number>[]>([]);
   const [format, setFormat] = useState<'json' | 'csv'>('json');
   const [copied, setCopied] = useState(false);
@@ -138,14 +140,11 @@ export const MockGeneratorView: React.FC = () => {
         </div>
       </div>
 
-      <Card className="border-dashed border-primary/25 bg-primary/[0.02]">
-        <CardContent className="py-4 text-sm text-muted-foreground space-y-1">
-          <p className="font-semibold text-foreground">Quick Start</p>
-          <p>1. เพิ่ม/แก้ฟิลด์ที่ต้องการใน Schema</p>
-          <p>2. ตั้งจำนวน Record Count</p>
-          <p>3. กด Generate แล้ว Copy หรือ Download</p>
-        </CardContent>
-      </Card>
+      <QuickStartCard steps={[
+        'เพิ่ม/แก้ฟิลด์ที่ต้องการใน Schema',
+        'ตั้งจำนวน Record Count',
+        'กด Generate แล้ว Copy หรือ Download',
+      ]} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
         {/* Left Side: Config */}
@@ -204,9 +203,22 @@ export const MockGeneratorView: React.FC = () => {
                       value={count}
                       min={1}
                       max={500}
-                      onChange={(e) => setCount(parseInt(e.target.value) || 1)}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value)
+                        if (isNaN(val) || val < 1) {
+                          setCountError('Must be at least 1')
+                          setCount(1)
+                        } else if (val > 500) {
+                          setCountError('Maximum is 500')
+                          setCount(500)
+                        } else {
+                          setCountError(null)
+                          setCount(val)
+                        }
+                      }}
                       className="h-10"
                     />
+                    {countError && <p className="mt-1 text-xs text-destructive">{countError}</p>}
                   </div>
                   <Button 
                     onClick={handleGenerate} 

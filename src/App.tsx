@@ -10,8 +10,18 @@ import { CsvConverterView } from './features/csv-converter/CsvConverterView'
 import { Button } from '@/components/common/Button'
 import { Toaster } from 'sonner'
 
+// Co-located route map — keeps App.tsx and HomeView in sync
+const TOOL_ROUTES: Record<string, string> = {
+  'json-parser': '/json-tool',
+  'excel-tool': '/excel-tool',
+}
+
 function App() {
   const navigate = useNavigate()
+
+  const handleSelectTool = (id: string) => {
+    navigate(TOOL_ROUTES[id] ?? `/${id}`)
+  }
 
   return (
     <div className="relative flex min-h-screen flex-col bg-background text-foreground selection:bg-primary/30">
@@ -22,9 +32,11 @@ function App() {
       <Toaster position="top-right" richColors expand={false} />
       <header className="sticky top-0 z-50 border-b border-border/70 bg-background/85 backdrop-blur-md">
         <div className="container relative mx-auto flex h-16 items-center justify-between px-4">
-          <div 
-            className="group flex cursor-pointer items-center gap-2"
+          {/* Use <button> so it's keyboard-navigable */}
+          <button
+            className="group flex items-center gap-2 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             onClick={() => navigate('/')}
+            aria-label="Go to home"
           >
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/20 transition-transform group-hover:scale-105">
               <span className="text-xl font-bold text-white">T</span>
@@ -33,20 +45,16 @@ function App() {
               <p className="text-sm font-semibold uppercase tracking-[0.12em] text-muted-foreground">Workspace</p>
               <p className="text-base font-bold">Test Tools Hub</p>
             </div>
-          </div>
+          </button>
           <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground/90">
             Developer Utilities
           </div>
         </div>
       </header>
-      
+
       <main className="relative z-10 flex-1">
         <Routes>
-          <Route path="/" element={<HomeView onSelectTool={(id) => {
-            if (id === 'json-parser') navigate('/json-tool');
-            else if (id === 'excel-tool') navigate('/excel-tool');
-            else navigate(`/${id}`);
-          }} />} />
+          <Route path="/" element={<HomeView onSelectTool={handleSelectTool} />} />
           <Route path="/loop-api" element={<LoopApiView />} />
           <Route path="/mock-generator" element={<MockGeneratorView />} />
           <Route path="/base64-tool" element={<Base64ToolView />} />
@@ -58,17 +66,14 @@ function App() {
             <div className="container mx-auto flex flex-col items-center justify-center space-y-4 px-4 py-20 text-center">
               <h2 className="text-3xl font-bold">Coming Soon</h2>
               <p className="text-muted-foreground">This tool is still under development.</p>
-              <Button
-                onClick={() => navigate('/')}
-                className="h-11 px-6"
-              >
+              <Button onClick={() => navigate('/')} className="h-11 px-6">
                 Go Back Home
               </Button>
             </div>
           } />
         </Routes>
       </main>
-      
+
       <footer className="relative z-10 mt-auto border-t border-border/70 py-8">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
           <p>© 2026 Test Tools Hub. Built for testers and developers.</p>

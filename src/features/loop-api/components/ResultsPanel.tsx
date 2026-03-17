@@ -68,12 +68,13 @@ export const ResultsPanel: React.FC<ResultsPanelProps> = ({ results }) => {
                   </p>
                </div>
 
-               <div className="flex items-center gap-2 opacity-0 transition-opacity group-hover:opacity-100">
+               <div className="flex items-center gap-2">
                   <Button 
                     variant="ghost" 
                     size="icon" 
-                    className="h-9 w-9 rounded-lg border border-transparent text-muted-foreground hover:border-primary/20 hover:bg-primary/5 hover:text-primary"
+                    className="h-9 w-9 rounded-lg border border-transparent text-muted-foreground hover:border-primary/20 hover:bg-primary/5 hover:text-primary sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100"
                     onClick={() => setSelectedResult(result)}
+                    aria-label={`View details for request #${result.index}`}
                   >
                     <Eye className="w-4 h-4" />
                   </Button>

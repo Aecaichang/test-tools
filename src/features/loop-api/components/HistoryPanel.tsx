@@ -88,6 +88,7 @@ export const HistoryPanel: React.FC<HistoryPanelProps> = ({
                           variant="ghost" 
                           size="icon" 
                           onClick={() => onLoad(item)}
+                          aria-label="Reload this request"
                           className="h-9 w-9 rounded-lg border border-transparent hover:border-primary/20 hover:bg-primary/10 hover:text-primary"
                         >
                           <RotateCw className="w-4 h-4" />
@@ -96,6 +97,7 @@ export const HistoryPanel: React.FC<HistoryPanelProps> = ({
                           variant="ghost" 
                           size="icon" 
                           onClick={() => onDelete(item.id)}
+                          aria-label="Delete this history item"
                           className="h-9 w-9 rounded-lg border border-transparent text-muted-foreground/40 hover:border-destructive/20 hover:bg-destructive/10 hover:text-destructive"
                         >
                           <Trash2 className="w-4 h-4" />

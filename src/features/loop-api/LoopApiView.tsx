@@ -2,6 +2,7 @@ import * as React from 'react';
 import { useEffect } from 'react';
 import { Zap, History, LayoutDashboard, Settings2, Activity, Gauge, Archive } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/common/Card';
+import { QuickStartCard } from '@/components/common/QuickStartCard';
 import {
   Tabs,
   TabsContent,
@@ -37,7 +38,7 @@ export const LoopApiView: React.FC = () => {
   }, [fetchHistory]);
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] transition-colors duration-500">
+    <div className="min-h-screen bg-background transition-colors duration-500">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="mx-auto max-w-[1600px] space-y-6 p-4 sm:p-6 md:space-y-8 md:p-8">
           <header className="space-y-5">
@@ -114,14 +115,11 @@ export const LoopApiView: React.FC = () => {
               </Card>
             </div>
 
-            <Card className="border-dashed border-primary/25 bg-primary/[0.02]">
-              <CardContent className="space-y-1 py-4 text-sm text-muted-foreground">
-                <p className="font-semibold text-foreground">Quick Start</p>
-                <p>1. วาง cURL และกด Parse</p>
-                <p>2. ปรับ payload/header ตามต้องการ</p>
-                <p>3. ตั้งจำนวน loop แล้วกด Execute</p>
-              </CardContent>
-            </Card>
+            <QuickStartCard steps={[
+              'วาง cURL และกด Parse',
+              'ปรับ payload/header ตามต้องการ',
+              'ตั้งจำนวน loop แล้วกด Execute',
+            ]} />
           </header>
 
           <main>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/common/Card';
+import { QuickStartCard } from '@/components/common/QuickStartCard';
 import { Button } from '@/components/common/Button';
 import { Textarea } from '@/components/common/Textarea';
 import { 
@@ -44,12 +45,13 @@ export const Base64ToolView: React.FC = () => {
   }, [input, mode]);
 
   const toggleMode = () => {
-    setMode(prev => prev === 'encode' ? 'decode' : 'encode');
-    // Swap input and output for quick convenience
-    if (output && !output.startsWith('Error:')) {
-      setInput(output);
+    const prevInput = input
+    const prevOutput = output && !output.startsWith('Error:') ? output : ''
+    setMode(prev => prev === 'encode' ? 'decode' : 'encode')
+    if (prevOutput) {
+      setInput(prevOutput)
     }
-  };
+  }
 
   const copyToClipboard = () => {
     if (!output || output.startsWith('Error:')) return;
@@ -73,14 +75,11 @@ export const Base64ToolView: React.FC = () => {
         <p className="text-muted-foreground font-medium">เข้ารหัสและถอดรหัสข้อความเป็นรูปแบบ Base64 อย่างรวดเร็วและปลอดภัย</p>
       </div>
 
-      <Card className="border-dashed border-primary/25 bg-primary/[0.02]">
-        <CardContent className="py-4 text-sm text-muted-foreground space-y-1">
-          <p className="font-semibold text-foreground">Quick Start</p>
-          <p>1. วางข้อความในช่อง Input</p>
-          <p>2. เลือก Encode หรือ Decode</p>
-          <p>3. คัดลอกผลลัพธ์จากฝั่ง Output</p>
-        </CardContent>
-      </Card>
+      <QuickStartCard steps={[
+        'วางข้อความในช่อง Input',
+        'เลือก Encode หรือ Decode',
+        'คัดลอกผลลัพธ์จากฝั่ง Output',
+      ]} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
         {/* Left Side: Input */}
