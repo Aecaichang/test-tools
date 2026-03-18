@@ -26,6 +26,7 @@ interface MockRequestContext {
 
 interface MockDispatchResult {
   kind: 'disabled' | 'not-found' | 'method-not-allowed' | 'mock';
+  disabledReason?: 'missing-env';
   requestMethod?: string;
   requestPath?: string;
   acceptedMethods?: MockHttpMethod[];
@@ -52,6 +53,7 @@ interface MockRouteRecord {
 interface MockServerSnapshot {
   enabled: boolean;
   routes: MockRouteDefinition[];
+  disabledReason?: 'missing-env';
 }
 
 const MOCK_ROUTES_TABLE = 'mock_routes';
@@ -268,7 +270,7 @@ const fetchJson = async <T>(url: string, supabaseAnonKey: string): Promise<T> =>
 const loadMockServerSnapshot = async (): Promise<MockServerSnapshot> => {
   const env = getRuntimeEnv();
   if (!env) {
-    return { enabled: false, routes: [] };
+    return { enabled: false, routes: [], disabledReason: 'missing-env' };
   }
 
   const now = Date.now();
@@ -303,7 +305,7 @@ const normalizeAcceptedMethods = (routes: MockRouteDefinition[]) =>
 const resolveMockDispatch = async (request: MockRequestContext): Promise<MockDispatchResult> => {
   const snapshot = await loadMockServerSnapshot();
   if (!snapshot.enabled) {
-    return { kind: 'disabled' };
+    return { kind: 'disabled', disabledReason: snapshot.disabledReason };
   }
 
   const matchingRoutes = findMatchingMockRoutesByPath(snapshot.routes, request.path);
@@ -411,7 +413,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (dispatch.kind === 'disabled') {
       createJsonResponse(res, 503, {
         error: 'Mock Server Disabled',
-        message: 'Mock Server is currently disabled in mock_server_settings.',
+        message: dispatch.disabledReason === 'missing-env'
+          ? 'Missing Supabase env vars on the Vercel deployment.'
+          : 'Mock Server is currently disabled in mock_server_settings.',
+        reason: dispatch.disabledReason === 'missing-env' ? 'missing-env' : 'server-disabled',
         requestPath: requestContext.path,
       });
       return;

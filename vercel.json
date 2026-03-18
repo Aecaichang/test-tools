@@ -2,11 +2,11 @@
   "rewrites": [
     {
       "source": "/shopeeApi",
-      "destination": "/api/mock?mock_path="
+      "destination": "/api/mock?mock_path=/shopeeApi"
     },
     {
       "source": "/shopeeApi/(.*)",
-      "destination": "/api/mock?mock_path=$1"
+      "destination": "/api/mock?mock_path=/shopeeApi/$1"
     },
     {
       "source": "/proxy/(.*)",

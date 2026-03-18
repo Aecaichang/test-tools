@@ -17,11 +17,13 @@ interface MockRouteRecord {
 interface MockServerSnapshot {
   enabled: boolean;
   routes: MockRouteDefinition[];
+  disabledReason?: 'missing-env';
 }
 
 export type MockDispatchResult =
   | {
       kind: 'disabled';
+      disabledReason?: 'missing-env';
     }
   | {
       kind: 'not-found';
@@ -96,7 +98,7 @@ const fetchJson = async <T>(url: string, supabaseAnonKey: string): Promise<T> =>
 export const loadMockServerSnapshot = async (): Promise<MockServerSnapshot> => {
   const env = getRuntimeEnv();
   if (!env) {
-    return { enabled: false, routes: [] };
+    return { enabled: false, routes: [], disabledReason: 'missing-env' };
   }
 
   const now = Date.now();
@@ -137,7 +139,7 @@ export const resolveMockDispatch = async (
 ): Promise<MockDispatchResult> => {
   const snapshot = await loadMockServerSnapshot();
   if (!snapshot.enabled) {
-    return { kind: 'disabled' };
+    return { kind: 'disabled', disabledReason: snapshot.disabledReason };
   }
 
   const matchingRoutes = findMatchingMockRoutesByPath(snapshot.routes, request.path);
