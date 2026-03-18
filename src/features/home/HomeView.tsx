@@ -11,7 +11,8 @@ import {
   Link,
   FileSpreadsheet,
   ArrowRightLeft,
-  Sparkles
+  Sparkles,
+  Server
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -125,6 +126,16 @@ export const HomeView: React.FC<HomeViewProps> = ({ onSelectTool }) => {
       accentClass: 'from-indigo-500/20 to-blue-500/20',
       iconClass: 'bg-indigo-500',
       category: 'Data',
+      status: 'beta'
+    },
+    {
+      id: 'mock-server',
+      name: 'Mock Server',
+      description: 'ตั้ง route จำลองและตอบกลับ payload แบบ local ได้ทันที เพื่อทดสอบ API โดยไม่ต้องรอ backend',
+      icon: <Server className="w-8 h-8" />,
+      accentClass: 'from-emerald-500/20 to-cyan-500/20',
+      iconClass: 'bg-emerald-600',
+      category: 'API',
       status: 'beta'
     },
     {

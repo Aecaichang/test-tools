@@ -45,7 +45,6 @@ export const Base64ToolView: React.FC = () => {
   }, [input, mode]);
 
   const toggleMode = () => {
-    const prevInput = input
     const prevOutput = output && !output.startsWith('Error:') ? output : ''
     setMode(prev => prev === 'encode' ? 'decode' : 'encode')
     if (prevOutput) {

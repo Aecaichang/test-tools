@@ -70,11 +70,11 @@ export const TesterPanel: React.FC<TesterPanelProps> = ({
               </div>
               <h3 className="text-sm font-bold uppercase tracking-widest text-foreground/80">CURL Command</h3>
             </div>
-            <div className="flex items-center gap-2">
-               <Badge variant="outline" className="h-6 rounded-lg border-primary/20 bg-primary/5 px-2 text-[10px] font-bold text-primary">
-                 AUTO-DETECT
-               </Badge>
-            </div>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="h-6 rounded-lg border-primary/20 bg-primary/5 px-2 text-[10px] font-bold text-primary">
+                  AUTO-DETECT
+                </Badge>
+             </div>
           </div>
 
           <div className="relative">
@@ -114,7 +114,7 @@ export const TesterPanel: React.FC<TesterPanelProps> = ({
                 <p className="mb-0.5 text-[10px] font-bold uppercase tracking-widest text-primary/60">Destination URL</p>
                 <p className="truncate font-mono text-sm font-semibold text-foreground/80">{parsedData.url}</p>
              </div>
-             <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-background px-3 py-2">
+            <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-background px-3 py-2">
                 <Globe className="h-3.5 w-3.5 text-muted-foreground/40" />
                 <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Proxy</span>
                 <Checkbox 

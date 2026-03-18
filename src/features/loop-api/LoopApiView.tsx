@@ -113,6 +113,7 @@ export const LoopApiView: React.FC = () => {
                   <p className="text-sm font-semibold text-foreground">{historyItems.length} logs</p>
                 </CardContent>
               </Card>
+
             </div>
 
             <QuickStartCard steps={[

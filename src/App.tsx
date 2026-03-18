@@ -2,6 +2,8 @@ import { useNavigate, Routes, Route } from 'react-router-dom'
 import { LoopApiView } from './features/loop-api/LoopApiView'
 import { HomeView } from './features/home/HomeView'
 import { MockGeneratorView } from './features/mock-generator/MockGeneratorView'
+import { MockServerProvider } from './features/mock-server/MockServerProvider'
+import { MockServerView } from './features/mock-server/MockServerView'
 import { Base64ToolView } from './features/base64-tool/Base64ToolView'
 import { JsonToolView } from './features/json-tool/JsonToolView'
 import { ExcelToolView } from './features/excel-tool/ExcelToolView'
@@ -14,6 +16,7 @@ import { Toaster } from 'sonner'
 const TOOL_ROUTES: Record<string, string> = {
   'json-parser': '/json-tool',
   'excel-tool': '/excel-tool',
+  'mock-server': '/mock-server',
 }
 
 function App() {
@@ -57,6 +60,11 @@ function App() {
           <Route path="/" element={<HomeView onSelectTool={handleSelectTool} />} />
           <Route path="/loop-api" element={<LoopApiView />} />
           <Route path="/mock-generator" element={<MockGeneratorView />} />
+          <Route path="/mock-server" element={
+            <MockServerProvider>
+              <MockServerView />
+            </MockServerProvider>
+          } />
           <Route path="/base64-tool" element={<Base64ToolView />} />
           <Route path="/json-tool" element={<JsonToolView />} />
           <Route path="/excel-tool" element={<ExcelToolView />} />

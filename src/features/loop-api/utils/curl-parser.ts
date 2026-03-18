@@ -19,17 +19,10 @@ export function parseCurl(curlCommand: string): ParsedCurl {
   // We can't just replace all \s+ globally because it ruins multipart bodies
   const joinedLines = curlCommand.replace(/\\\n/g, ' ');
 
-  // 2. Extract URL
-  const urlRegex = /(?:--location|curl)\s+['"]([^'"]+)['"]|['"](https?:\/\/[^'"]+)['"]/;
-  const urlMatch = joinedLines.match(urlRegex);
-  
-  if (urlMatch) {
-    result.url = (urlMatch[1] || urlMatch[2]).trim();
-  } else {
-    const fallbackMatch = joinedLines.match(/https?:\/\/[^\s'"]+/);
-    if (fallbackMatch) {
-      result.url = fallbackMatch[0].trim();
-    }
+  // 2. Extract URL-like token. Supports absolute URLs and templated values like ${BASE_URL}/path.
+  const urlToken = extractCurlUrlToken(joinedLines);
+  if (urlToken) {
+    result.url = urlToken;
   }
 
   // 3. Extract Method
@@ -84,6 +77,60 @@ export function parseCurl(curlCommand: string): ParsedCurl {
   }
 
   return result;
+}
+
+function stripWrappingQuotes(value: string): string {
+  const trimmed = value.trim();
+  if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
+    return trimmed.slice(1, -1);
+  }
+  return trimmed;
+}
+
+function extractCurlUrlToken(command: string): string {
+  const tokens = command.match(/'[^']*'|"[^"]*"|\S+/g) ?? [];
+  let skipNext = false;
+
+  for (let index = 0; index < tokens.length; index += 1) {
+    const token = tokens[index];
+    const normalized = stripWrappingQuotes(token);
+
+    if (skipNext) {
+      skipNext = false;
+      continue;
+    }
+
+    if (index === 0 && normalized === 'curl') {
+      continue;
+    }
+
+    if (
+      normalized === '-X' ||
+      normalized === '--request' ||
+      normalized === '-H' ||
+      normalized === '--header' ||
+      normalized === '-d' ||
+      normalized === '--data' ||
+      normalized === '--data-raw' ||
+      normalized === '--data-binary'
+    ) {
+      skipNext = true;
+      continue;
+    }
+
+    if (normalized.startsWith('-')) {
+      continue;
+    }
+
+    return normalized;
+  }
+
+  const fallbackMatch = command.match(/https?:\/\/[^\s'"]+/);
+  if (fallbackMatch) {
+    return fallbackMatch[0].trim();
+  }
+
+  return '';
 }
 
 function unescapeShellString(str: string): string {

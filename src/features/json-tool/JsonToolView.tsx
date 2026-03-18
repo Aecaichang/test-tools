@@ -3,7 +3,6 @@ import { Code2, FileCode, GitCompare } from 'lucide-react';
 import { JsonFormatter } from './components/JsonFormatter';
 import { JsonDiff } from './components/JsonDiff';
 import { cn } from '@/lib/utils';
-import { Card, CardContent } from '@/components/common/Card';
 import { QuickStartCard } from '@/components/common/QuickStartCard';
 
 type SubView = 'formatter' | 'diff';

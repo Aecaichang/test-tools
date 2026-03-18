@@ -54,7 +54,7 @@ export const ResultsPanel: React.FC<ResultsPanelProps> = ({ results }) => {
                </div>
                
                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-0.5">
+              <div className="flex items-center gap-2 mb-0.5">
                      <span className="text-[10px] font-semibold text-muted-foreground/50">#{result.index}</span>
                      <Badge 
                       variant={result.success ? 'success' : 'destructive'} 
