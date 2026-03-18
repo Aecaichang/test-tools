@@ -3,7 +3,7 @@ import { type IncomingMessage, type ServerResponse } from 'http'
 import { loadEnv, defineConfig, type ViteDevServer } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
-import { findMatchingMockRouteByPath, resolveMockRoute } from './src/features/mock-server/mock-server-utils'
+import { findMatchingMockRoutesByPath, resolveMockRoute } from './src/features/mock-server/mock-server-utils'
 
 interface MockRouteRecord {
   id: string
@@ -137,20 +137,19 @@ const createMockServerMiddleware = (supabaseUrl: string, supabaseAnonKey: string
         body: requestBody,
       }
 
-      const pathMatchedRoute = findMatchingMockRouteByPath(currentSnapshot.routes, requestContext.path)
-      if (pathMatchedRoute) {
+      const pathMatchedRoutes = findMatchingMockRoutesByPath(currentSnapshot.routes, requestContext.path)
+      if (pathMatchedRoutes.length > 0) {
         const method = requestContext.method
-        const routeMethod = pathMatchedRoute.method.toUpperCase()
-        const methodMatched = routeMethod === 'ANY' || routeMethod === method
+        const methodMatchedRoute = pathMatchedRoutes.find((route) => route.method.toUpperCase() === 'ANY' || route.method.toUpperCase() === method)
 
-        if (!methodMatched) {
+        if (!methodMatchedRoute) {
           res.statusCode = 405
           res.setHeader('content-type', 'application/json; charset=utf-8')
           res.end(JSON.stringify({
             error: 'Method Not Allowed',
-            message: `Route ${pathMatchedRoute.pathPattern} exists but only accepts ${pathMatchedRoute.method}`,
+            message: `Route ${pathMatchedRoutes[0].pathPattern} exists but does not accept ${method}`,
             requestMethod: method,
-            routeMethod: pathMatchedRoute.method,
+            routeMethod: pathMatchedRoutes.map((route) => route.method),
             requestPath: requestContext.path,
           }, null, 2))
           return

@@ -19,10 +19,10 @@ const matchesPattern = (pattern: string, pathname: string) => {
 export const matchesMockRoutePath = (pathPattern: string, pathname: string) =>
   matchesPattern(pathPattern, pathname);
 
-export const findMatchingMockRouteByPath = (
+export const findMatchingMockRoutesByPath = (
   routes: MockRouteDefinition[],
   pathname: string,
-) => routes.find((item) => item.enabled && matchesPattern(item.pathPattern, pathname)) ?? null;
+) => routes.filter((item) => item.enabled && matchesPattern(item.pathPattern, pathname));
 
 const coerceJson = (value: string) => {
   try {
