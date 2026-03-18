@@ -9,7 +9,6 @@ import { Textarea } from '@/components/common/Textarea';
 import { Checkbox } from '@/components/common/Checkbox';
 import { Badge } from '@/components/common/Badge';
 import { QuickStartCard } from '@/components/common/QuickStartCard';
-import { Modal } from '@/components/common/Modal';
 import { cn } from '@/lib/utils';
 import { useMockServer } from './MockServerProvider';
 import { createMockRouteFromCurl } from './mock-server-curl';
@@ -263,8 +262,8 @@ export const MockServerView: React.FC = () => {
 
   const [draft, setDraft] = useState<MockRouteDraft>(() => createInitialDraft(createDraftFromRoute));
   const [editingRouteId, setEditingRouteId] = useState<string | null>(null);
+  const [isCreatingRoute, setIsCreatingRoute] = useState(false);
   const [curlInput, setCurlInput] = useState('');
-  const [isComposerOpen, setIsComposerOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const requestUrlPreview = buildMockRequestUrl(draft.pathPattern);
 
@@ -288,17 +287,17 @@ export const MockServerView: React.FC = () => {
       const nextRoute = draftToRoute(draft);
       await upsertRoute(nextRoute);
       setEditingRouteId(null);
-      setIsComposerOpen(false);
+      setIsCreatingRoute(false);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Invalid route configuration';
       toast.error(message);
     }
   };
 
-  const handleResetDraft = () => {
+  const handleCancelAddDraft = () => {
     setEditingRouteId(null);
+    setIsCreatingRoute(false);
     setDraft(createInitialDraft(createDraftFromRoute));
-    setIsComposerOpen(false);
   };
 
   const handleCancelInlineEdit = () => {
@@ -307,14 +306,14 @@ export const MockServerView: React.FC = () => {
 
   const handleEditRoute = (route: MockRouteDefinition) => {
     setEditingRouteId(route.id);
+    setIsCreatingRoute(false);
     setDraft(createDraftFromRoute(route));
-    setIsComposerOpen(false);
   };
 
   const handleAddRoute = () => {
     setEditingRouteId(null);
+    setIsCreatingRoute(true);
     setDraft(createInitialDraft(createDraftFromRoute));
-    setIsComposerOpen(true);
   };
 
   const handleDeleteRoute = (routeId: string) => {
@@ -372,6 +371,7 @@ export const MockServerView: React.FC = () => {
       const backup = parseBackupPayload(raw);
       await restoreFromBackup(backup);
       setEditingRouteId(null);
+      setIsCreatingRoute(false);
       setDraft(createInitialDraft(createDraftFromRoute));
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to import backup';
@@ -383,6 +383,7 @@ export const MockServerView: React.FC = () => {
     try {
       const nextDraft = createMockRouteFromCurl(curlInput);
       setEditingRouteId(null);
+      setIsCreatingRoute(true);
       setDraft(nextDraft);
       toast.success('Generated route from cURL');
     } catch (error) {
@@ -497,46 +498,9 @@ export const MockServerView: React.FC = () => {
             </div>
             <Button onClick={handleAddRoute} className="h-11 rounded-xl px-5 text-sm font-semibold">
               <Plus className="h-4 w-4" />
-              Add Route
+              Add API
             </Button>
           </div>
-
-          <Card className="overflow-hidden border-border/60 bg-card/90 shadow-sm">
-            <CardHeader className="space-y-2 border-b border-border/60 bg-secondary/20">
-              <CardTitle className="flex items-center gap-2 text-xl font-black">
-                <Wand2 className="h-5 w-5 text-primary" />
-                Generate From cURL
-              </CardTitle>
-              <CardDescription>วาง cURL แล้วให้ระบบแปลงเป็น Mock Route draft ให้อัตโนมัติ</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4 p-5">
-              <Textarea
-                value={curlInput}
-                onChange={(event) => setCurlInput(event.target.value)}
-                placeholder={`curl 'https://api.example.com/users/123' \\
-  -X GET \\
-  -H 'accept: application/json'`}
-                className="min-h-40 rounded-2xl border-border/60 font-mono text-sm"
-              />
-              <div className="flex flex-col gap-3 sm:flex-row">
-                <Button
-                  onClick={handleGenerateFromCurl}
-                  disabled={!curlInput.trim()}
-                  className="h-11 rounded-xl px-5 text-sm font-semibold"
-                >
-                  <Wand2 className="h-4 w-4" />
-                  Generate Draft
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setCurlInput('')}
-                  className="h-11 rounded-xl px-5 text-sm font-semibold"
-                >
-                  Clear cURL
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
 
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             {summaryCards.map((card) => {
@@ -574,6 +538,62 @@ export const MockServerView: React.FC = () => {
                 <CardDescription>รายการ route เรียงต่อกันตามลำดับใน composer</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3 p-5">
+                {isCreatingRoute && (
+                  <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 shadow-sm">
+                    <div className="mb-5 flex flex-col gap-4">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="rounded-lg px-2 py-1 text-[10px] font-bold">
+                            New API
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">สร้าง API ใหม่แบบ inline</span>
+                        </div>
+                        <p className="text-sm font-semibold text-foreground">{draft.name}</p>
+                      </div>
+                      <div className="space-y-3 rounded-2xl border border-border/60 bg-background/80 p-4">
+                        <div className="flex items-center gap-2">
+                          <Wand2 className="h-4 w-4 text-primary" />
+                          <p className="text-sm font-semibold text-foreground">Generate From cURL</p>
+                        </div>
+                        <p className="text-xs text-muted-foreground">วาง cURL แล้วให้ระบบแปลงเป็น draft เพื่อกรอกฟอร์มต่อได้ทันที</p>
+                        <Textarea
+                          value={curlInput}
+                          onChange={(event) => setCurlInput(event.target.value)}
+                          placeholder={`curl 'https://api.example.com/users/123' \\
+  -X GET \\
+  -H 'accept: application/json'`}
+                          className="min-h-36 rounded-2xl border-border/60 font-mono text-sm"
+                        />
+                        <div className="flex flex-col gap-3 sm:flex-row">
+                          <Button
+                            onClick={handleGenerateFromCurl}
+                            disabled={!curlInput.trim()}
+                            className="h-11 rounded-xl px-5 text-sm font-semibold"
+                          >
+                            <Wand2 className="h-4 w-4" />
+                            Generate Draft
+                          </Button>
+                          <Button
+                            variant="outline"
+                            onClick={() => setCurlInput('')}
+                            className="h-11 rounded-xl px-5 text-sm font-semibold"
+                          >
+                            Clear cURL
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                    <RouteEditorFields
+                      draft={draft}
+                      requestUrlPreview={requestUrlPreview}
+                      isLoading={isLoading}
+                      onDraftChange={setDraft}
+                      onSave={() => void handleSave()}
+                      onCancel={handleCancelAddDraft}
+                      primaryActionLabel="Save API"
+                    />
+                  </div>
+                )}
                 {routes.map((route, index) => (
                   <div
                     key={route.id}
@@ -740,31 +760,13 @@ export const MockServerView: React.FC = () => {
                 ))}
                 {routes.length === 0 && (
                   <div className="rounded-2xl border border-dashed border-border/60 bg-secondary/10 py-12 text-center text-sm text-muted-foreground">
-                    No routes yet. Create one from the composer.
+                    No APIs yet. Use Add API to create one.
                   </div>
                 )}
               </CardContent>
             </Card>
           </div>
       </div>
-
-      <Modal
-        isOpen={isComposerOpen}
-        onClose={() => setIsComposerOpen(false)}
-        title="Add Route"
-        description="กำหนด route, request URL, และ response ที่จะส่งกลับ"
-        className="max-w-5xl"
-      >
-        <RouteEditorFields
-          draft={draft}
-          requestUrlPreview={requestUrlPreview}
-          isLoading={isLoading}
-          onDraftChange={setDraft}
-          onSave={() => void handleSave()}
-          onCancel={handleResetDraft}
-          primaryActionLabel="Save Route"
-        />
-      </Modal>
     </div>
   );
 };
