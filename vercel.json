@@ -1,6 +1,14 @@
 {
   "rewrites": [
     {
+      "source": "/shopeeApi",
+      "destination": "/api/mock?mock_path="
+    },
+    {
+      "source": "/shopeeApi/(.*)",
+      "destination": "/api/mock?mock_path=$1"
+    },
+    {
       "source": "/proxy/(.*)",
       "destination": "/api/proxy?_proxy_path=$1"
     },

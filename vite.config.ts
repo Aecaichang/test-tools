@@ -1,41 +1,8 @@
-import { createClient } from '@supabase/supabase-js'
 import { type IncomingMessage, type ServerResponse } from 'http'
 import { loadEnv, defineConfig, type ViteDevServer } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
-import { findMatchingMockRoutesByPath, resolveMockRoute } from './src/features/mock-server/mock-server-utils'
-
-interface MockRouteRecord {
-  id: string
-  name: string
-  enabled: boolean
-  method: string
-  path_pattern: string
-  status: number
-  delay_ms: number
-  response_headers: Record<string, string>
-  response_body: string
-  notes: string
-}
-
-interface MockServerSnapshot {
-  enabled: boolean
-  routes: Array<{
-    id: string
-    name: string
-    enabled: boolean
-    method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'ANY'
-    pathPattern: string
-    status: number
-    delayMs: number
-    responseHeaders: Record<string, string>
-    responseBody: string
-    notes: string
-  }>
-}
-
-const MOCK_ROUTES_TABLE = 'mock_routes'
-const MOCK_SERVER_SETTINGS_TABLE = 'mock_server_settings'
+import { buildMockRequestContext, resolveMockDispatch } from './src/features/mock-server/mock-server-runtime'
 
 const getRequestUrl = (req: IncomingMessage) => {
   const host = req.headers.host ?? 'localhost:5173'
@@ -64,52 +31,7 @@ const readRequestBody = async (req: IncomingMessage) => {
   return raw
 }
 
-const toMockRoute = (record: MockRouteRecord) => ({
-  id: record.id,
-  name: record.name,
-  enabled: record.enabled,
-  method: (record.method || 'GET') as MockServerSnapshot['routes'][number]['method'],
-  pathPattern: record.path_pattern,
-  status: record.status,
-  delayMs: record.delay_ms,
-  responseHeaders: record.response_headers ?? { 'content-type': 'application/json' },
-  responseBody: record.response_body ?? '{}',
-  notes: record.notes ?? '',
-})
-
-const createMockServerMiddleware = (supabaseUrl: string, supabaseAnonKey: string) => {
-  const supabase = createClient(supabaseUrl, supabaseAnonKey)
-  let snapshot: MockServerSnapshot = { enabled: false, routes: [] }
-  let lastLoadedAt = 0
-
-  const loadSnapshot = async () => {
-    const now = Date.now()
-    if (now - lastLoadedAt < 1500 && snapshot.routes.length > 0) {
-      return snapshot
-    }
-
-    const [settingsResult, routesResult] = await Promise.all([
-      supabase.from(MOCK_SERVER_SETTINGS_TABLE).select('enabled').eq('id', 1).maybeSingle(),
-      supabase.from(MOCK_ROUTES_TABLE).select('*').order('created_at', { ascending: true }),
-    ])
-
-    if (settingsResult.error) {
-      throw settingsResult.error
-    }
-
-    if (routesResult.error) {
-      throw routesResult.error
-    }
-
-    snapshot = {
-      enabled: Boolean(settingsResult.data?.enabled),
-      routes: (routesResult.data ?? []).map((item) => toMockRoute(item as MockRouteRecord)),
-    }
-    lastLoadedAt = now
-
-    return snapshot
-  }
-
+const createMockServerMiddleware = () => {
   return async (req: IncomingMessage, res: ServerResponse, next: () => void) => {
     if (!req.url) {
       next()
@@ -117,82 +39,96 @@ const createMockServerMiddleware = (supabaseUrl: string, supabaseAnonKey: string
     }
 
     try {
-      const currentSnapshot = await loadSnapshot()
-      if (!currentSnapshot.enabled) {
-        next()
-        return
-      }
-
       const requestUrl = getRequestUrl(req)
       const requestBody = await readRequestBody(req)
-      const requestContext = {
-        method: (req.method ?? 'GET').toUpperCase(),
-        url: requestUrl,
-        path: new URL(requestUrl).pathname,
-        query: Object.fromEntries(new URL(requestUrl).searchParams.entries()),
-        headers: Object.entries(req.headers).reduce<Record<string, string>>((acc, [key, value]) => {
+      const requestContext = buildMockRequestContext(
+        requestUrl,
+        (req.method ?? 'GET').toUpperCase(),
+        Object.entries(req.headers).reduce<Record<string, string>>((acc, [key, value]) => {
           acc[key.toLowerCase()] = Array.isArray(value) ? value.join(',') : String(value ?? '')
           return acc
         }, {}),
-        body: requestBody,
-      }
+        requestBody,
+      )
 
-      const pathMatchedRoutes = findMatchingMockRoutesByPath(currentSnapshot.routes, requestContext.path)
-      if (pathMatchedRoutes.length > 0) {
-        const method = requestContext.method
-        const methodMatchedRoute = pathMatchedRoutes.find((route) => route.method.toUpperCase() === 'ANY' || route.method.toUpperCase() === method)
-
-        if (!methodMatchedRoute) {
-          res.statusCode = 405
+      const dispatch = await resolveMockDispatch(requestContext)
+      if (dispatch.kind === 'disabled') {
+        if (requestContext.path.startsWith('/shopeeApi/')) {
+          res.statusCode = 503
           res.setHeader('content-type', 'application/json; charset=utf-8')
           res.end(JSON.stringify({
-            error: 'Method Not Allowed',
-            message: `Route ${pathMatchedRoutes[0].pathPattern} exists but does not accept ${method}`,
-            requestMethod: method,
-            routeMethod: pathMatchedRoutes.map((route) => route.method),
+            error: 'Mock Server Disabled',
+            message: 'Mock Server is currently disabled in mock_server_settings.',
             requestPath: requestContext.path,
           }, null, 2))
           return
         }
-      }
 
-      const match = resolveMockRoute(currentSnapshot.routes, requestContext)
-      if (!match) {
         next()
         return
       }
 
-      if (match.delayMs > 0) {
-        await new Promise((resolve) => setTimeout(resolve, match.delayMs))
+      if (dispatch.kind === 'not-found') {
+        if (requestContext.path.startsWith('/shopeeApi/')) {
+          res.statusCode = 404
+          res.setHeader('content-type', 'application/json; charset=utf-8')
+          res.end(JSON.stringify({
+            error: 'Not Found',
+            message: `No mock route matched ${requestContext.path}`,
+            requestMethod: requestContext.method,
+            requestPath: requestContext.path,
+          }, null, 2))
+          return
+        }
+
+        next()
+        return
       }
 
-      res.statusCode = match.status
-      Object.entries(match.headers).forEach(([key, value]) => {
+      if (dispatch.kind === 'method-not-allowed') {
+        res.statusCode = 405
+        res.setHeader('content-type', 'application/json; charset=utf-8')
+        res.end(JSON.stringify({
+          error: 'Method Not Allowed',
+          message: `Mock route exists for ${dispatch.requestPath} but does not accept ${dispatch.requestMethod}`,
+          requestMethod: dispatch.requestMethod,
+          requestPath: dispatch.requestPath,
+          acceptedMethods: dispatch.acceptedMethods,
+        }, null, 2))
+        return
+      }
+
+      if (dispatch.delayMs > 0) {
+        await new Promise((resolve) => setTimeout(resolve, dispatch.delayMs))
+      }
+
+      res.statusCode = dispatch.status
+      Object.entries(dispatch.headers).forEach(([key, value]) => {
         res.setHeader(key, value)
       })
 
-      if (match.status === 204 || requestContext.method === 'HEAD') {
+      if (dispatch.status === 204 || requestContext.method === 'HEAD') {
         res.end()
         return
       }
 
-      if (typeof match.data === 'string') {
-        res.end(match.data)
+      if (typeof dispatch.body === 'string') {
+        res.end(dispatch.body)
         return
       }
 
-      const contentType = String(match.headers['content-type'] ?? match.headers['Content-Type'] ?? '').toLowerCase()
+      const contentType = String(dispatch.headers['content-type'] ?? dispatch.headers['Content-Type'] ?? '').toLowerCase()
       if (contentType.includes('application/json')) {
-        res.end(JSON.stringify(match.data))
+        res.end(JSON.stringify(dispatch.body))
         return
       }
 
-      if (match.data === null || match.data === undefined) {
+      if (dispatch.body === null || dispatch.body === undefined) {
         res.end('')
         return
       }
 
-      res.end(String(match.data))
+      res.end(String(dispatch.body))
     } catch (error) {
       console.error('[Mock Server] Failed to resolve route:', error)
       next()
@@ -210,7 +146,7 @@ export default defineConfig(({ mode }) => {
     ? {
         name: 'mock-server-middleware',
         configureServer(server: ViteDevServer) {
-          server.middlewares.use(createMockServerMiddleware(supabaseUrl, supabaseAnonKey))
+          server.middlewares.use(createMockServerMiddleware())
         },
       }
     : undefined
